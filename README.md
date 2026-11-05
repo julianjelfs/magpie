@@ -6,7 +6,7 @@ It runs on the Raspberry Pi at **https://magpie.julianjelfs.co.uk**. That one UR
 
 ## Using it
 
-- **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe the picture on a phone. The label beside each piece is the Met's own record, with a link to its page.
+- **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe right or left anywhere on the screen. The label beside each piece is the Met's own record, with a link to its page. On a phone the picture gets the whole screen and the label comes up on demand: tap the picture or the ⓘ button. It stays up for the next pieces until you close it.
 - **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. About a quarter of picks come from the Met's highlights in those rooms.
 - **Hoard**: every kept piece, filterable by tag. Open a piece for its tags and sketching notes, or to let it go. A piece you let go of is never offered again.
 - **What you keep** (linked from the hoard): how often you keep what you're shown, by room, century, kind and highlights, plus artists kept more than once. It also shows how new pieces are being steered.

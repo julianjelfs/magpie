@@ -13,7 +13,18 @@
   let dragging = $state(false);
   let loaded = $state(false);
   let broken = $state(false);
+  /** Phone only: the label, shown on demand. Stays open across pieces until closed. */
+  let info = $state(false);
   let startX = 0;
+  let startY = 0;
+  let onArt = false;
+
+  // A new piece on the wall starts unloaded, whatever happened to the last one.
+  $effect(() => {
+    void piece?.key;
+    loaded = false;
+    broken = false;
+  });
 
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -25,8 +36,6 @@
         app.decide(verdict);
         leaving = null;
         dx = 0;
-        loaded = false;
-        broken = false;
       },
       reduced() ? 0 : verdict === 'keep' ? 460 : 300
     );
@@ -39,15 +48,25 @@
     else if (event.key === 'ArrowLeft' || event.key === 'p') decide('pass');
   }
 
+  // A swipe can start anywhere on the screen, except on something you can press or read.
   function down(event: PointerEvent) {
-    if (leaving || event.button !== 0) return;
+    if (!piece || leaving || event.button !== 0) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('button, a, .sheet')) return;
     dragging = true;
     startX = event.clientX;
+    startY = event.clientY;
+    onArt = !!target.closest('.art');
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
 
   function move(event: PointerEvent) {
-    if (dragging) dx = event.clientX - startX;
+    if (!dragging) return;
+    const x = event.clientX - startX;
+    const y = event.clientY - startY;
+    // Mostly up or down: not a swipe.
+    if (Math.abs(y) > 24 && Math.abs(y) > Math.abs(x) * 1.5) return cancel();
+    dx = x;
   }
 
   function up() {
@@ -55,7 +74,16 @@
     dragging = false;
     if (dx > THRESHOLD) decide('keep');
     else if (dx < -THRESHOLD) decide('pass');
-    else dx = 0;
+    else {
+      // A tap on the picture brings up its label.
+      if (onArt && Math.abs(dx) < 8) info = !info;
+      dx = 0;
+    }
+  }
+
+  function cancel() {
+    dragging = false;
+    dx = 0;
   }
 
   const leaning = $derived(dx > THRESHOLD ? 'keep' : dx < -THRESHOLD ? 'pass' : null);
@@ -63,7 +91,14 @@
 
 <svelte:window onkeydown={onKey} />
 
-<section class="look" aria-label="Look">
+<section
+  class="look"
+  aria-label="Look"
+  onpointerdown={down}
+  onpointermove={move}
+  onpointerup={up}
+  onpointercancel={cancel}
+>
   <div class="stage">
     {#if piece}
       {#key piece.key}
@@ -74,15 +109,7 @@
           class:dragging
           style:--dx="{dx}px"
         >
-          <div
-            class="art"
-            class:loaded
-            role="presentation"
-            onpointerdown={down}
-            onpointermove={move}
-            onpointerup={up}
-            onpointercancel={up}
-          >
+          <div class="art" class:loaded>
             {#if broken}
               <p class="broken">
                 This picture didn't reach the device before the Pi went out of reach. You can still keep or pass it.
@@ -113,9 +140,30 @@
     {/if}
   </div>
 
+  {#if piece && info}
+    <div class="sheet" id="piece-info">
+      <Label {piece} />
+    </div>
+  {/if}
+
   <div class="verdicts">
     <button class="pass" class:leaning={leaning === 'pass'} onclick={() => decide('pass')} disabled={!piece}>
       Pass <kbd aria-hidden="true">←</kbd>
+    </button>
+    <button
+      class="about"
+      class:on={info}
+      onclick={() => (info = !info)}
+      disabled={!piece}
+      aria-expanded={info}
+      aria-controls="piece-info"
+      aria-label={info ? 'Hide the label' : 'Show the label'}
+    >
+      <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <circle cx="10" cy="6.2" r="1.1" fill="currentColor" />
+        <path d="M10 9v5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
     </button>
     <button class="keep" class:leaning={leaning === 'keep'} onclick={() => decide('keep')} disabled={!piece}>
       Keep <kbd aria-hidden="true">→</kbd>
@@ -131,6 +179,9 @@
     display: grid;
     grid-template-rows: 1fr var(--verdicts);
     position: relative;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   /* Gallery light, falling from above. */
@@ -194,9 +245,7 @@
 
   .art {
     min-width: 0;
-    touch-action: pan-y;
     cursor: grab;
-    user-select: none;
   }
 
   .dragging .art {
@@ -302,6 +351,12 @@
     background: #fff;
   }
 
+  /* The label sits beside the picture on wide screens; the button and panel are for phones. */
+  .about,
+  .sheet {
+    display: none;
+  }
+
   .leaning {
     transform: scale(1.06);
   }
@@ -325,19 +380,62 @@
       overflow-y: auto;
     }
 
-    /* Auto margins centre it while there is room, and never clip the top when there isn't. */
+    /* The whole picture, as big as the screen allows. Swipes never scroll anything. */
+    .stage {
+      overflow: hidden;
+      touch-action: none;
+    }
+
     .hang {
       margin: auto 0;
-      --art-h: 56dvh;
+      --art-h: calc(100dvh - var(--bar) - var(--verdicts) - env(safe-area-inset-bottom) - 12px);
       --art-w: calc(100vw - 2 * var(--gutter));
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      padding-bottom: 12px;
     }
 
     figcaption {
-      width: min(100%, 420px);
+      display: none;
+    }
+
+    .sheet {
+      display: block;
+      position: fixed;
+      z-index: 4;
+      left: var(--gutter);
+      right: var(--gutter);
+      bottom: calc(var(--verdicts) + env(safe-area-inset-bottom) - 6px);
+      max-height: 55dvh;
+      overflow-y: auto;
+      touch-action: pan-y;
+      user-select: text;
+      -webkit-user-select: text;
+      animation: rise 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+    }
+
+    .verdicts .about {
+      display: inline-grid;
+      place-items: center;
+      flex: none;
+      width: 46px;
+      min-width: 0;
+      height: 46px;
+      padding: 0;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--on-wall-faint);
+      color: var(--on-wall-soft);
+    }
+
+    .verdicts .about.on {
+      color: var(--ink);
+      background: var(--paper);
+      border-color: var(--paper);
     }
 
     .verdicts {
@@ -347,9 +445,11 @@
       transition: background var(--wall-change) ease;
     }
 
-    .verdicts button {
+    .verdicts .pass,
+    .verdicts .keep {
       flex: 1;
-      max-width: 200px;
+      min-width: 0;
+      max-width: 180px;
     }
   }
 </style>
