@@ -25,11 +25,26 @@ function save(key: string, value: unknown) {
   }
 }
 
-/** Fetch a picture through the service worker so it is there offline. */
+/**
+ * Put a picture in the service worker's 'art' cache so it is there offline. Written from
+ * the page rather than left to the worker: on a first visit the worker isn't in control
+ * yet, and anything fetched before it is would never be cached.
+ */
+async function keepOffline(src: string) {
+  try {
+    const cache = await caches.open('art');
+    if (!(await cache.match(src))) await cache.add(src);
+  } catch {
+    // No Cache API (plain http), or the Pi went away mid-fetch. Try again next time.
+  }
+}
+
+/** Fetch and decode a picture ahead of time, and keep it for offline. */
 function preload(src: string) {
   const img = new Image();
   img.decoding = 'async';
   img.src = src;
+  keepOffline(src);
 }
 
 type SavedHoard = { pieces: Kept[]; at: string | null };
@@ -143,6 +158,10 @@ class Magpie {
       this.reachable = true;
       this.fromPi = { pieces, at: new Date().toISOString() };
       save(HOARD, this.fromPi);
+      // In the background and one at a time, so a big hoard doesn't swamp the Pi.
+      void (async () => {
+        for (const p of pieces) if (p.image_status === 'ready') await keepOffline(p.thumb);
+      })();
     } catch (e) {
       this.mark(e);
     }
