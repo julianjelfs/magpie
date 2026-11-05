@@ -32,3 +32,4 @@ class DecisionBatch(BaseModel):
 
 class Rooms(BaseModel):
     enabled: list[int]
+    sculpture: bool | None = None

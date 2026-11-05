@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 class Source(Protocol):
-    async def random_draft(self, rooms: list[int], skip: set[str]) -> Draft | None: ...
+    async def random_draft(self, rooms: list[int], skip: set[str], sculpture: bool = False) -> Draft | None: ...
     async def download(self, url: str) -> bytes: ...
 
 
@@ -65,17 +65,18 @@ class Worker:
                 if store.unserved_count(conn) >= config.CANDIDATE_BUFFER:
                     return
                 rooms = store.rooms(conn)
+                with_sculpture = store.sculpture(conn)
                 skip = store.known_keys(conn)
-            if await self.prepare_one(rooms, skip):
+            if await self.prepare_one(rooms, skip, with_sculpture):
                 misses = 0
             else:
                 misses += 1
             # Finish kept pieces between candidates, so a keep never waits for a full buffer.
             await self.finish_hoard()
 
-    async def prepare_one(self, rooms: list[int], skip: set[str]) -> bool:
+    async def prepare_one(self, rooms: list[int], skip: set[str], sculpture: bool = False) -> bool:
         try:
-            draft = await self.source.random_draft(rooms, skip)
+            draft = await self.source.random_draft(rooms, skip, sculpture)
             if not draft:
                 return False
             raw = await self.source.download(draft.image_url)

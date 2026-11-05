@@ -46,7 +46,9 @@ export const fetchHoard = () => call<{ pieces: Kept[] }>('/api/hoard').then((r) 
 
 export const retryPiece = (key: string) => call(`/api/hoard/${key}/retry`, { method: 'POST' });
 
-export const fetchRooms = () => call<{ rooms: Room[] }>('/api/rooms').then((r) => r.rooms);
+export type RoomSettings = { rooms: Room[]; sculpture: boolean };
 
-export const saveRooms = (enabled: number[]) =>
-  call<{ rooms: Room[] }>('/api/rooms', { method: 'PUT', body: JSON.stringify({ enabled }) }).then((r) => r.rooms);
+export const fetchRooms = () => call<RoomSettings>('/api/rooms');
+
+export const saveRooms = (enabled: number[], sculpture: boolean) =>
+  call<RoomSettings>('/api/rooms', { method: 'PUT', body: JSON.stringify({ enabled, sculpture }) });

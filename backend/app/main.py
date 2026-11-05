@@ -40,6 +40,8 @@ async def lifespan(app: FastAPI):
     with db.session() as conn:
         if lost := store.heal_missing_images(conn):
             log.warning("%d kept pictures were missing; fetching them again", lost)
+        stale = store.prune_candidates(conn)
+    remove_files(stale)
     worker: Worker | None = getattr(app.state, "worker", None)
     task = None
     if worker is None and os.environ.get("MAGPIE_NO_WORKER") != "1":
@@ -111,13 +113,17 @@ def retry(key: str) -> dict:
 def get_rooms() -> dict:
     with db.session() as conn:
         enabled = set(store.rooms(conn))
-    return {"rooms": [{"id": i, "name": n, "enabled": i in enabled} for i, n in sorted(DEPARTMENTS.items(), key=lambda x: x[1])]}
+        with_sculpture = store.sculpture(conn)
+    return {
+        "rooms": [{"id": i, "name": n, "enabled": i in enabled} for i, n in sorted(DEPARTMENTS.items(), key=lambda x: x[1])],
+        "sculpture": with_sculpture,
+    }
 
 
 @app.put("/api/rooms")
 def put_rooms(body: Rooms) -> dict:
     with db.session() as conn:
-        stale = store.set_rooms(conn, body.enabled)
+        stale = store.set_rooms(conn, body.enabled, body.sculpture)
     remove_files(stale)
     poke()
     return get_rooms()

@@ -7,7 +7,7 @@ It runs on the Raspberry Pi at **https://magpie.julianjelfs.co.uk**. That one UR
 ## Using it
 
 - **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe the picture on a phone. The label beside each piece is the Met's own record, with a link to its page.
-- **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. About a quarter of picks come from the Met's highlights in those rooms.
+- **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. About a quarter of picks come from the Met's highlights in those rooms.
 - **Hoard**: every kept piece, filterable by tag. Open a piece for its tags and sketching notes, or to let it go. A piece you let go of is never offered again.
 
 ## Offline
@@ -18,7 +18,7 @@ The installed app opens with the Pi out of reach. It keeps six pieces on the dev
 
 One FastAPI process on `127.0.0.1:8060` serves the API and the built Svelte app. Caddy terminates TLS in front of it. A background task keeps eight pieces ready: it draws a random object from a department's ID list (cached for a week), shrinks the Met's original (often 8MB or more) to 2000px, and picks a wall colour from the picture. When you keep a piece, the task moves that picture into `backend/images/hoard/`, makes a thumbnail and sends a 1568px copy, with the museum record and the hoard's existing tags, to Claude Opus 5.5 at low effort. Tagging costs about two cents a piece; `magpie status` shows the running total.
 
-The Met retired its v1 search on 2026-10-01. The v1.1 search stops at offset 10,000, which is why random picks come from `/v1/objects?departmentIds=N` instead.
+The Met retired its v1 search on 2026-10-01. Rooms that hold only pictures (Drawings and Prints, European Paintings, Photographs) are listed whole from `/v1/objects?departmentIds=N`. Every other room is listed from v1.1 searches filtered by type (`medium=Paintings` and so on), because the v1.1 search stops at offset 10,000. Each fetched record is checked against the picture types before its image is downloaded. Objects that can never be used are remembered in `backend/cache/rejected.json` and never fetched again. The Met's firewall blocks the house IP for a few minutes after a burst of requests, so Magpie sends one a second and rests five minutes after a 403. The laptop shares that IP, so heavy use of the API from it starves the Pi.
 
 Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly backup copies the database only. Every kept piece records its museum image URL, and on startup Magpie fetches any picture that is missing from disk.
 
@@ -31,6 +31,7 @@ Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly ba
 5. A kept piece stays in the hoard when tagging fails, and tagging can be retried. `test_invariant_5_a_keep_survives_failed_tagging_and_can_be_retried`
 6. A verdict given with the Pi out of reach survives a reload and reaches the Pi when it is back. `outbox.test.ts`, "invariant 6"
 7. A kept piece whose picture is lost from disk gets it back. `test_invariant_7_a_kept_piece_whose_picture_is_lost_is_fetched_again`
+8. Only pictures are offered, and sculpture only when it is switched on. `test_invariant_8_only_pictures_are_offered_and_sculpture_only_when_on`
 
 The Anthropic API key never reaches the browser or the repo. It lives only in `backend/.env` (gitignored, mode 600) on the Pi and the laptop.
 
@@ -38,7 +39,7 @@ The Anthropic API key never reaches the browser or the repo. It lives only in `b
 
 ```bash
 scripts/dev.sh                          # API on :8060, Vite on :5180
-cd backend && uv run pytest             # invariants 1-5 and 7
+cd backend && uv run pytest             # invariants 1-5, 7 and 8
 cd frontend && npm test                 # invariant 6
 cd frontend && npm run check            # svelte-check
 ```

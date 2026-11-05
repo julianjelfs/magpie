@@ -5,38 +5,47 @@
 
   let dialog: HTMLDialogElement;
   let rooms = $state<Room[]>([]);
+  let sculpture = $state(false);
   let problem = $state<string | null>(null);
 
   export async function open() {
     problem = null;
     dialog.showModal();
     try {
-      rooms = await fetchRooms();
+      ({ rooms, sculpture } = await fetchRooms());
     } catch (e) {
       problem = e instanceof Unreachable ? 'Rooms can be changed when the Pi is in reach.' : String(e);
     }
   }
 
-  async function toggle(room: Room) {
-    const enabled = rooms.filter((r) => (r.id === room.id ? !r.enabled : r.enabled)).map((r) => r.id);
+  async function save(enabled: number[], withSculpture: boolean) {
     if (enabled.length === 0) {
       problem = 'Leave at least one room open.';
       return;
     }
     try {
-      rooms = await saveRooms(enabled);
+      ({ rooms, sculpture } = await saveRooms(enabled, withSculpture));
       problem = null;
       app.refill();
     } catch (e) {
       problem = e instanceof Unreachable ? 'The Pi went out of reach. Nothing was changed.' : String(e);
     }
   }
+
+  const open_ = () => rooms.filter((r) => r.enabled).map((r) => r.id);
+
+  function toggle(room: Room) {
+    save(rooms.filter((r) => (r.id === room.id ? !r.enabled : r.enabled)).map((r) => r.id), sculpture);
+  }
 </script>
 
 <dialog bind:this={dialog} onclick={(e) => e.target === dialog && dialog.close()}>
   <div class="sheet">
     <h2>Rooms</h2>
-    <p class="lede">New pieces come from these departments of the Met. Pieces already waiting on this device stay.</p>
+    <p class="lede">
+      New pieces are paintings, drawings, prints, photographs and manuscript pages from these departments of the
+      Met. Pieces already waiting on this device stay.
+    </p>
     {#if problem}<p class="problem" role="alert">{problem}</p>{/if}
     <ul>
       {#each rooms as room (room.id)}
@@ -48,6 +57,12 @@
         </li>
       {/each}
     </ul>
+    {#if rooms.length}
+      <label class="extra">
+        <input type="checkbox" checked={sculpture} onchange={() => save(open_(), !sculpture)} />
+        Sculpture too
+      </label>
+    {/if}
     <button class="done" onclick={() => dialog.close()}>Done</button>
   </div>
 </dialog>
@@ -96,6 +111,15 @@
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+
+  .extra {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 18px;
+    font-size: 15px;
+    cursor: pointer;
   }
 
   li label {

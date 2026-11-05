@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import images
-from .met import DEFAULT_ROOMS, DEPARTMENTS
+from .met import DEFAULT_ROOMS, DEPARTMENTS, is_picture
 from .schemas import Decision
 
 FACETS = ["period", "movement", "region", "medium", "technique", "subject"]
@@ -33,20 +33,37 @@ def rooms(conn: sqlite3.Connection) -> list[int]:
     return [r for r in json.loads(row["value"]) if r in DEPARTMENTS]
 
 
-def set_rooms(conn: sqlite3.Connection, enabled: list[int]) -> list[Path]:
-    """Save the rooms to draw from. Drops waiting candidates from rooms now closed."""
-    chosen = [r for r in dict.fromkeys(enabled) if r in DEPARTMENTS]
+def sculpture(conn: sqlite3.Connection) -> bool:
+    """Whether sculpture is offered alongside pictures. Off unless switched on."""
+    row = conn.execute("SELECT value FROM preference WHERE key = 'sculpture'").fetchone()
+    return bool(row and json.loads(row["value"]))
+
+
+def _set(conn: sqlite3.Connection, key: str, value) -> None:
     conn.execute(
-        "INSERT INTO preference (key, value) VALUES ('rooms', ?) "
-        "ON CONFLICT (key) DO UPDATE SET value = excluded.value",
-        (json.dumps(chosen),),
+        "INSERT INTO preference (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+        (key, json.dumps(value)),
     )
-    names = {DEPARTMENTS[r] for r in chosen}
-    stale = [
-        row["piece_key"]
-        for row in conn.execute("SELECT piece_key, meta FROM candidate WHERE served_at IS NULL")
-        if json.loads(row["meta"]).get("department") not in names
-    ]
+
+
+def set_rooms(conn: sqlite3.Connection, enabled: list[int], with_sculpture: bool | None = None) -> list[Path]:
+    """Save what to draw from. Drops waiting candidates that no longer fit."""
+    _set(conn, "rooms", [r for r in dict.fromkeys(enabled) if r in DEPARTMENTS])
+    if with_sculpture is not None:
+        _set(conn, "sculpture", with_sculpture)
+    return prune_candidates(conn)
+
+
+def prune_candidates(conn: sqlite3.Connection) -> list[Path]:
+    """Drop waiting candidates from closed rooms, or that aren't pictures. Returns their files."""
+    names = {DEPARTMENTS[r] for r in rooms(conn)}
+    with_sculpture = sculpture(conn)
+    stale = []
+    for row in conn.execute("SELECT piece_key, meta FROM candidate WHERE served_at IS NULL").fetchall():
+        meta = json.loads(row["meta"])
+        fits = is_picture(meta.get("classification", ""), meta.get("object_name", ""), with_sculpture)
+        if meta.get("department") not in names or not fits:
+            stale.append(row["piece_key"])
     for key in stale:
         conn.execute("DELETE FROM candidate WHERE piece_key = ?", (key,))
     return [images.candidate_path(k) for k in stale]
