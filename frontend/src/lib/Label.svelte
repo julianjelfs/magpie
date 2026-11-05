@@ -5,6 +5,7 @@
 
   const maker = $derived(piece.artist || piece.culture || 'Unknown maker');
   const bio = $derived(piece.artist ? piece.artist_bio : piece.period);
+  const source = $derived(piece.source === 'wikidata' ? 'See it on Wikidata' : 'See it at the Met');
 </script>
 
 <!-- The tombstone label a museum hangs beside a piece. -->
@@ -14,9 +15,13 @@
   <p class="title"><cite>{piece.title}</cite>{#if piece.date}, {piece.date}{/if}</p>
   {#if piece.medium}<p class="medium">{piece.medium}</p>{/if}
   {#if piece.dimensions}<p class="small">{piece.dimensions.split('\n')[0]}</p>{/if}
-  <p class="small soft">{piece.department}</p>
+  {#if piece.source === 'wikidata'}
+    {#if piece.credit_line}<p class="small soft">{piece.credit_line}</p>{/if}
+  {:else}
+    <p class="small soft">{piece.department}</p>
+  {/if}
   {#if piece.museum_url}
-    <a class="source" href={piece.museum_url} target="_blank" rel="noreferrer">See it at the Met</a>
+    <a class="source" href={piece.museum_url} target="_blank" rel="noreferrer">{source}</a>
   {/if}
 </div>
 

@@ -79,6 +79,7 @@ def describe_record(meta: dict) -> str:
         ("Dimensions", meta.get("dimensions")),
         ("Classification", meta.get("classification")),
         ("Department", meta.get("department")),
+        ("Collection", meta.get("credit_line") if meta.get("source") == "wikidata" else None),
     ]
     return "\n".join(f"{name}: {value}" for name, value in fields if value)
 

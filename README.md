@@ -7,7 +7,7 @@ It runs on the Raspberry Pi at **https://magpie.julianjelfs.co.uk**. That one UR
 ## Using it
 
 - **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe right or left anywhere on the screen. The label beside each piece is the Met's own record, with a link to its page. On a phone the picture gets the whole screen and the label comes up on demand: tap the picture or the ⓘ button. It stays up for the next pieces until you close it.
-- **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. About a quarter of picks come from the Met's highlights in those rooms.
+- **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. "Modern painting (Wikimedia Commons)" adds paintings by about a hundred artists from Monet to Mondrian, from Wikidata and Wikimedia Commons. About a quarter of picks come from the Met's highlights in those rooms.
 - **Hoard**: every kept piece, filterable by tag. Open a piece for its tags and sketching notes, or to let it go. A piece you let go of is never offered again.
 - **What you keep** (linked from the hoard): how often you keep what you're shown, by room, century, kind and highlights, plus artists kept more than once. It also shows how new pieces are being steered.
 
@@ -25,6 +25,8 @@ One FastAPI process on `127.0.0.1:8060` serves the API and the built Svelte app.
 
 The Met retired its v1 search on 2026-10-01. Rooms that hold only pictures (Drawings and Prints, European Paintings, Photographs) are listed whole from `/v1/objects?departmentIds=N`. Every other room is listed from v1.1 searches filtered by type (`medium=Paintings` and so on), because the v1.1 search stops at offset 10,000. Each fetched record is checked against the picture types before its image is downloaded. Objects that can never be used are remembered in `backend/cache/rejected.json` and never fetched again. The Met's firewall blocks the house IP for a few minutes after a burst of requests, so Magpie sends one a second and rests five minutes after a 403. The laptop shares that IP, so heavy use of the API from it starves the Pi.
 
+Modern painting comes from Wikidata and Wikimedia Commons, because open museum collections only publish public-domain images and modern work mostly isn't. In the UK a painting stays in copyright until the end of the 70th year after its artist's death, so an artist who died in 1955 is public domain from 2026. `backend/app/artists.json` lists the artists (name, Wikidata ID, dates, nationality, group); edit it to add or drop people. Each artist is checked against that rule every time, so later artists join on their own each January. Wikidata's query service times out on broad questions but answers per artist in a second or two, so each artist's paintings are listed with one small query and cached for a week. Requests are spaced two seconds apart, and a 429 means waiting as long as Wikidata asks. A pick is a random artist, then a random painting with an image.
+
 Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly backup copies the database only. Every kept piece records its museum image URL, and on startup Magpie fetches any picture that is missing from disk.
 
 ## Invariants
@@ -38,6 +40,7 @@ Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly ba
 7. A kept piece whose picture is lost from disk gets it back. `test_invariant_7_a_kept_piece_whose_picture_is_lost_is_fetched_again`
 8. Only pictures are offered, and sculpture only when it is switched on. `test_invariant_8_only_pictures_are_offered_and_sculpture_only_when_on`
 9. Steering favours rooms you keep from, and never gives an open room less than 5% of picks. `test_invariant_9_steering_favours_kept_rooms_and_never_shuts_one_out`
+10. A modern painting is offered only once its artist has been dead for more than 70 full years. `test_invariant_10_only_artists_dead_more_than_70_years_are_offered`
 
 The Anthropic API key never reaches the browser or the repo. It lives only in `backend/.env` (gitignored, mode 600) on the Pi and the laptop.
 
@@ -45,7 +48,7 @@ The Anthropic API key never reaches the browser or the repo. It lives only in `b
 
 ```bash
 scripts/dev.sh                          # API on :8060, Vite on :5180
-cd backend && uv run pytest             # invariants 1-5 and 7-9
+cd backend && uv run pytest             # invariants 1-5 and 7-10
 cd frontend && npm test                 # invariant 6
 cd frontend && npm run check            # svelte-check
 ```

@@ -14,7 +14,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db, images, store, taste
-from .met import DEPARTMENTS, Met
+from .met import Met
+from .sources import ROOMS, Sources
+from .wikidata import Wikidata
 from .schemas import DecisionBatch, Rooms
 from .tagger import ClaudeTagger
 from .worker import Worker, remove_files
@@ -31,7 +33,7 @@ def make_worker() -> Worker:
     tagger = ClaudeTagger() if os.environ.get("ANTHROPIC_API_KEY") else None
     if not tagger:
         log.warning("ANTHROPIC_API_KEY is not set: kept pieces will wait, untagged")
-    return Worker(Met.create(config.cache_dir()), tagger)
+    return Worker(Sources(Met.create(config.cache_dir()), Wikidata.create(config.cache_dir())), tagger)
 
 
 @asynccontextmanager
@@ -121,7 +123,7 @@ def get_rooms() -> dict:
         enabled = set(store.rooms(conn))
         with_sculpture = store.sculpture(conn)
     return {
-        "rooms": [{"id": i, "name": n, "enabled": i in enabled} for i, n in sorted(DEPARTMENTS.items(), key=lambda x: x[1])],
+        "rooms": [{"id": i, "name": n, "enabled": i in enabled} for i, n in sorted(ROOMS.items(), key=lambda x: x[1])],
         "sculpture": with_sculpture,
     }
 

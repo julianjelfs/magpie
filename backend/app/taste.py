@@ -13,7 +13,8 @@ import json
 import sqlite3
 from collections import Counter, defaultdict
 
-from .met import DEPARTMENTS, HIGHLIGHT_SHARE, room_of
+from .met import HIGHLIGHT_SHARE, room_of
+from .sources import ROOMS
 
 # Pseudo-verdicts at the overall keep rate added to every group before comparing.
 PRIOR_STRENGTH = 10
@@ -111,7 +112,7 @@ def _breakdown(verdicts, key, limit: int = 10) -> list[dict]:
 
 def summary(conn: sqlite3.Connection, open_rooms: list[int]) -> dict:
     verdicts = _verdicts(conn)
-    room_name = lambda m: DEPARTMENTS.get(room_of(m) or 0, m.get("department") or "Unknown")  # noqa: E731
+    room_name = lambda m: ROOMS.get(room_of(m) or 0, m.get("department") or "Unknown")  # noqa: E731
     artists = Counter(m.get("artist") for kept, m in verdicts if kept and m.get("artist"))
     weights = room_weights(conn, open_rooms)
     return {
@@ -124,7 +125,7 @@ def summary(conn: sqlite3.Connection, open_rooms: list[int]) -> dict:
         "artists": [{"name": a, "kept": n} for a, n in artists.most_common(8) if n > 1],
         "steering": {
             "rooms": sorted(
-                ({"name": DEPARTMENTS[r], "share": round(w, 3)} for r, w in zip(open_rooms, weights)),
+                ({"name": ROOMS[r], "share": round(w, 3)} for r, w in zip(open_rooms, weights)),
                 key=lambda r: -r["share"],
             ),
             "highlights": round(highlight_share(conn), 3),

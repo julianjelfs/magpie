@@ -44,7 +44,8 @@
     <h2>Rooms</h2>
     <p class="lede">
       New pieces are paintings, drawings, prints, photographs and manuscript pages from these departments of the
-      Met. Pieces already waiting on this device stay.
+      Met, and modern paintings from Wikimedia Commons by artists out of copyright. Pieces already waiting on this
+      device stay.
     </p>
     {#if problem}<p class="problem" role="alert">{problem}</p>{/if}
     <ul>

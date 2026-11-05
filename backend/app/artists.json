@@ -1,0 +1,810 @@
+[
+ {
+  "name": "Claude Monet",
+  "qid": "Q296",
+  "born": 1840,
+  "died": 1926,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Pierre-Auguste Renoir",
+  "qid": "Q39931",
+  "born": 1841,
+  "died": 1919,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Edgar Degas",
+  "qid": "Q46373",
+  "born": 1834,
+  "died": 1917,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Camille Pissarro",
+  "qid": "Q134741",
+  "born": 1830,
+  "died": 1903,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Alfred Sisley",
+  "qid": "Q175130",
+  "born": 1839,
+  "died": 1899,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Berthe Morisot",
+  "qid": "Q105320",
+  "born": 1841,
+  "died": 1895,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Mary Cassatt",
+  "qid": "Q173223",
+  "born": 1844,
+  "died": 1926,
+  "nationality": "United States",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Gustave Caillebotte",
+  "qid": "Q295144",
+  "born": 1848,
+  "died": 1894,
+  "nationality": "France",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Childe Hassam",
+  "qid": "Q737635",
+  "born": 1859,
+  "died": 1935,
+  "nationality": "United States",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Joaquín Sorolla",
+  "qid": "Q351746",
+  "born": 1863,
+  "died": 1923,
+  "nationality": "Spain",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Max Liebermann",
+  "qid": "Q158062",
+  "born": 1847,
+  "died": 1935,
+  "nationality": "Germany",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Lovis Corinth",
+  "qid": "Q157610",
+  "born": 1858,
+  "died": 1925,
+  "nationality": "Germany",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Anders Zorn",
+  "qid": "Q206820",
+  "born": 1860,
+  "died": 1920,
+  "nationality": "Sweden",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Peder Severin Krøyer",
+  "qid": "Q365068",
+  "born": 1851,
+  "died": 1909,
+  "nationality": "Norway",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Anna Ancher",
+  "qid": "Q253446",
+  "born": 1859,
+  "died": 1935,
+  "nationality": "Kingdom of Denmark",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Paul Cézanne",
+  "qid": "Q35548",
+  "born": 1839,
+  "died": 1906,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Vincent van Gogh",
+  "qid": "Q5582",
+  "born": 1853,
+  "died": 1890,
+  "nationality": "Kingdom of the Netherlands",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Paul Gauguin",
+  "qid": "Q37693",
+  "born": 1848,
+  "died": 1903,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Georges Seurat",
+  "qid": "Q34013",
+  "born": 1859,
+  "died": 1891,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Paul Signac",
+  "qid": "Q151573",
+  "born": 1863,
+  "died": 1935,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Henri de Toulouse-Lautrec",
+  "qid": "Q82445",
+  "born": 1864,
+  "died": 1901,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Henri Rousseau",
+  "qid": "Q156386",
+  "born": 1844,
+  "died": 1910,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Suzanne Valadon",
+  "qid": "Q156889",
+  "born": 1865,
+  "died": 1938,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Maurice Utrillo",
+  "qid": "Q108301",
+  "born": 1883,
+  "died": 1955,
+  "nationality": "France",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Walter Sickert",
+  "qid": "Q703369",
+  "born": 1860,
+  "died": 1942,
+  "nationality": "United Kingdom",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Harold Gilman",
+  "qid": "Q176368",
+  "born": 1876,
+  "died": 1919,
+  "nationality": "United Kingdom of Great Britain and Ireland",
+  "group": "Post-Impressionism"
+ },
+ {
+  "name": "Édouard Vuillard",
+  "qid": "Q239394",
+  "born": 1868,
+  "died": 1940,
+  "nationality": "France",
+  "group": "Nabis"
+ },
+ {
+  "name": "Pierre Bonnard",
+  "qid": "Q26408",
+  "born": 1867,
+  "died": 1947,
+  "nationality": "France",
+  "group": "Nabis"
+ },
+ {
+  "name": "Maurice Denis",
+  "qid": "Q440369",
+  "born": 1870,
+  "died": 1943,
+  "nationality": "France",
+  "group": "Nabis"
+ },
+ {
+  "name": "Paul Sérusier",
+  "qid": "Q326606",
+  "born": 1864,
+  "died": 1927,
+  "nationality": "France",
+  "group": "Nabis"
+ },
+ {
+  "name": "Odilon Redon",
+  "qid": "Q154349",
+  "born": 1840,
+  "died": 1916,
+  "nationality": "France",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Edvard Munch",
+  "qid": "Q41406",
+  "born": 1863,
+  "died": 1944,
+  "nationality": "Norway",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Fernand Khnopff",
+  "qid": "Q559559",
+  "born": 1858,
+  "died": 1921,
+  "nationality": "Belgium",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Arnold Böcklin",
+  "qid": "Q123071",
+  "born": 1827,
+  "died": 1901,
+  "nationality": "Switzerland",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Ferdinand Hodler",
+  "qid": "Q214564",
+  "born": 1853,
+  "died": 1918,
+  "nationality": "Switzerland",
+  "group": "Symbolism"
+ },
+ {
+  "name": "John Singer Sargent",
+  "qid": "Q155626",
+  "born": 1856,
+  "died": 1925,
+  "nationality": "United States",
+  "group": "Impressionism"
+ },
+ {
+  "name": "Félix Vallotton",
+  "qid": "Q123740",
+  "born": 1865,
+  "died": 1925,
+  "nationality": "Switzerland",
+  "group": "Nabis"
+ },
+ {
+  "name": "Jan Toorop",
+  "qid": "Q369416",
+  "born": 1858,
+  "died": 1928,
+  "nationality": "Kingdom of the Netherlands",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Giovanni Segantini",
+  "qid": "Q379300",
+  "born": 1858,
+  "died": 1899,
+  "nationality": "Austria–Hungary",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Hugo Simberg",
+  "qid": "Q263080",
+  "born": 1873,
+  "died": 1917,
+  "nationality": "Grand Duchy of Finland",
+  "group": "Symbolism"
+ },
+ {
+  "name": "James Ensor",
+  "qid": "Q158840",
+  "born": 1860,
+  "died": 1949,
+  "nationality": "Belgium",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Mikhail Vrubel",
+  "qid": "Q215100",
+  "born": 1856,
+  "died": 1910,
+  "nationality": "Russian Empire",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Nicholas Roerich",
+  "qid": "Q208993",
+  "born": 1874,
+  "died": 1947,
+  "nationality": "Russian Empire",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Harald Sohlberg",
+  "qid": "Q1367020",
+  "born": 1869,
+  "died": 1935,
+  "nationality": "Norway",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Eugène Jansson",
+  "qid": "Q647473",
+  "born": 1862,
+  "died": 1915,
+  "nationality": "Sweden",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Akseli Gallen-Kallela",
+  "qid": "Q170068",
+  "born": 1865,
+  "died": 1931,
+  "nationality": "Finland",
+  "group": "Symbolism"
+ },
+ {
+  "name": "Gustav Klimt",
+  "qid": "Q34661",
+  "born": 1862,
+  "died": 1918,
+  "nationality": "Austrian Empire",
+  "group": "Art Nouveau and Secession"
+ },
+ {
+  "name": "Egon Schiele",
+  "qid": "Q44032",
+  "born": 1890,
+  "died": 1918,
+  "nationality": "Cisleithania",
+  "group": "Art Nouveau and Secession"
+ },
+ {
+  "name": "Koloman Moser",
+  "qid": "Q45055",
+  "born": 1868,
+  "died": 1918,
+  "nationality": "Cisleithania",
+  "group": "Art Nouveau and Secession"
+ },
+ {
+  "name": "Alphonse Mucha",
+  "qid": "Q146691",
+  "born": 1860,
+  "died": 1939,
+  "nationality": "Nazi Germany",
+  "group": "Art Nouveau and Secession"
+ },
+ {
+  "name": "Vilhelm Hammershøi",
+  "qid": "Q380706",
+  "born": 1864,
+  "died": 1916,
+  "nationality": "Kingdom of Denmark",
+  "group": "Northern light"
+ },
+ {
+  "name": "Carl Larsson",
+  "qid": "Q187310",
+  "born": 1853,
+  "died": 1919,
+  "nationality": "Sweden",
+  "group": "Northern light"
+ },
+ {
+  "name": "Helene Schjerfbeck",
+  "qid": "Q236985",
+  "born": 1862,
+  "died": 1946,
+  "nationality": "Finland",
+  "group": "Northern light"
+ },
+ {
+  "name": "Isaac Levitan",
+  "qid": "Q211356",
+  "born": 1860,
+  "died": 1900,
+  "nationality": "Russian Empire",
+  "group": "Northern light"
+ },
+ {
+  "name": "Valentin Serov",
+  "qid": "Q217128",
+  "born": 1865,
+  "died": 1911,
+  "nationality": "Russian Empire",
+  "group": "Northern light"
+ },
+ {
+  "name": "Boris Kustodiev",
+  "qid": "Q313275",
+  "born": 1878,
+  "died": 1927,
+  "nationality": "Soviet Union",
+  "group": "Northern light"
+ },
+ {
+  "name": "Kuzma Petrov-Vodkin",
+  "qid": "Q364226",
+  "born": 1878,
+  "died": 1939,
+  "nationality": "Russian Soviet Federative Socialist Republic",
+  "group": "Northern light"
+ },
+ {
+  "name": "Gwen John",
+  "qid": "Q274339",
+  "born": 1876,
+  "died": 1939,
+  "nationality": "United Kingdom",
+  "group": "Northern light"
+ },
+ {
+  "name": "Henri Matisse",
+  "qid": "Q5589",
+  "born": 1869,
+  "died": 1954,
+  "nationality": "France",
+  "group": "Fauvism"
+ },
+ {
+  "name": "André Derain",
+  "qid": "Q156272",
+  "born": 1880,
+  "died": 1954,
+  "nationality": "France",
+  "group": "Fauvism"
+ },
+ {
+  "name": "Raoul Dufy",
+  "qid": "Q45205",
+  "born": 1877,
+  "died": 1953,
+  "nationality": "France",
+  "group": "Fauvism"
+ },
+ {
+  "name": "Albert Marquet",
+  "qid": "Q267858",
+  "born": 1875,
+  "died": 1947,
+  "nationality": "France",
+  "group": "Fauvism"
+ },
+ {
+  "name": "Ernst Ludwig Kirchner",
+  "qid": "Q229272",
+  "born": 1880,
+  "died": 1938,
+  "nationality": "German Reich",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Franz Marc",
+  "qid": "Q44054",
+  "born": 1880,
+  "died": 1916,
+  "nationality": "Kingdom of Bavaria",
+  "group": "Expressionism"
+ },
+ {
+  "name": "August Macke",
+  "qid": "Q33981",
+  "born": 1887,
+  "died": 1914,
+  "nationality": "Kingdom of Prussia",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Paula Modersohn-Becker",
+  "qid": "Q234370",
+  "born": 1876,
+  "died": 1907,
+  "nationality": "German Empire",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Max Beckmann",
+  "qid": "Q164683",
+  "born": 1884,
+  "died": 1950,
+  "nationality": "Germany",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Alexej von Jawlensky",
+  "qid": "Q156426",
+  "born": 1864,
+  "died": 1941,
+  "nationality": "Germany",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Chaïm Soutine",
+  "qid": "Q160141",
+  "born": 1893,
+  "died": 1943,
+  "nationality": "France",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Amedeo Modigliani",
+  "qid": "Q120993",
+  "born": 1884,
+  "died": 1920,
+  "nationality": "Kingdom of Italy",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Jules Pascin",
+  "qid": "Q469063",
+  "born": 1885,
+  "died": 1930,
+  "nationality": "United States",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Paul Klee",
+  "qid": "Q44007",
+  "born": 1879,
+  "died": 1940,
+  "nationality": "Switzerland",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Wassily Kandinsky",
+  "qid": "Q61064",
+  "born": 1866,
+  "died": 1944,
+  "nationality": "France",
+  "group": "Expressionism"
+ },
+ {
+  "name": "Juan Gris",
+  "qid": "Q151152",
+  "born": 1887,
+  "died": 1927,
+  "nationality": "Spain",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Robert Delaunay",
+  "qid": "Q33978",
+  "born": 1885,
+  "died": 1941,
+  "nationality": "France",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Fernand Léger",
+  "qid": "Q157183",
+  "born": 1881,
+  "died": 1955,
+  "nationality": "France",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Albert Gleizes",
+  "qid": "Q711903",
+  "born": 1881,
+  "died": 1953,
+  "nationality": "France",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Umberto Boccioni",
+  "qid": "Q152797",
+  "born": 1882,
+  "died": 1916,
+  "nationality": "Kingdom of Italy",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Lyubov Popova",
+  "qid": "Q259594",
+  "born": 1889,
+  "died": 1924,
+  "nationality": "Soviet Union",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Olga Rozanova",
+  "qid": "Q270460",
+  "born": 1886,
+  "died": 1918,
+  "nationality": "Russian Soviet Federative Socialist Republic",
+  "group": "Cubism and Futurism"
+ },
+ {
+  "name": "Kazimir Malevich",
+  "qid": "Q130777",
+  "born": 1879,
+  "died": 1935,
+  "nationality": "Soviet Union",
+  "group": "Abstraction"
+ },
+ {
+  "name": "Piet Mondrian",
+  "qid": "Q151803",
+  "born": 1872,
+  "died": 1944,
+  "nationality": "Kingdom of the Netherlands",
+  "group": "Abstraction"
+ },
+ {
+  "name": "Theo van Doesburg",
+  "qid": "Q160422",
+  "born": 1883,
+  "died": 1931,
+  "nationality": "Kingdom of the Netherlands",
+  "group": "Abstraction"
+ },
+ {
+  "name": "Hilma af Klint",
+  "qid": "Q436267",
+  "born": 1862,
+  "died": 1944,
+  "nationality": "Sweden",
+  "group": "Abstraction"
+ },
+ {
+  "name": "Winslow Homer",
+  "qid": "Q344838",
+  "born": 1836,
+  "died": 1910,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Thomas Eakins",
+  "qid": "Q214905",
+  "born": 1844,
+  "died": 1916,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "James McNeill Whistler",
+  "qid": "Q203643",
+  "born": 1834,
+  "died": 1903,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "George Bellows",
+  "qid": "Q167132",
+  "born": 1882,
+  "died": 1925,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Robert Henri",
+  "qid": "Q724860",
+  "born": 1865,
+  "died": 1929,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "John Sloan",
+  "qid": "Q861756",
+  "born": 1871,
+  "died": 1951,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Marsden Hartley",
+  "qid": "Q553259",
+  "born": 1877,
+  "died": 1943,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Arthur Dove",
+  "qid": "Q709461",
+  "born": 1880,
+  "died": 1946,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Charles Demuth",
+  "qid": "Q380494",
+  "born": 1883,
+  "died": 1935,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Grant Wood",
+  "qid": "Q217434",
+  "born": 1891,
+  "died": 1942,
+  "nationality": "United States",
+  "group": "American"
+ },
+ {
+  "name": "Paul Nash",
+  "qid": "Q727643",
+  "born": 1889,
+  "died": 1946,
+  "nationality": "United Kingdom",
+  "group": "British"
+ },
+ {
+  "name": "Frances Hodgkins",
+  "qid": "Q1264271",
+  "born": 1869,
+  "died": 1947,
+  "nationality": "United Kingdom",
+  "group": "British"
+ },
+ {
+  "name": "Santiago Rusiñol",
+  "qid": "Q366930",
+  "born": 1861,
+  "died": 1931,
+  "nationality": "Spain",
+  "group": "Spanish and Latin American"
+ },
+ {
+  "name": "Ramon Casas",
+  "qid": "Q725681",
+  "born": 1866,
+  "died": 1932,
+  "nationality": "Spain",
+  "group": "Spanish and Latin American"
+ },
+ {
+  "name": "Ignacio Zuloaga",
+  "qid": "Q460198",
+  "born": 1870,
+  "died": 1945,
+  "nationality": "Spain",
+  "group": "Spanish and Latin American"
+ },
+ {
+  "name": "José Clemente Orozco",
+  "qid": "Q332041",
+  "born": 1883,
+  "died": 1949,
+  "nationality": "Mexico",
+  "group": "Spanish and Latin American"
+ },
+ {
+  "name": "Takeuchi Seihō",
+  "qid": "Q3514329",
+  "born": 1864,
+  "died": 1942,
+  "nationality": "Japan",
+  "group": "Japanese"
+ }
+]

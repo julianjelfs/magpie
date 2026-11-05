@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import images
-from .met import DEFAULT_ROOMS, DEPARTMENTS, is_picture, room_of
+from .met import is_picture, room_of
+from .sources import DEFAULT_ROOMS, ROOMS
 from .schemas import Decision
 
 FACETS = ["period", "movement", "region", "medium", "technique", "subject"]
@@ -30,7 +31,7 @@ def rooms(conn: sqlite3.Connection) -> list[int]:
     row = conn.execute("SELECT value FROM preference WHERE key = 'rooms'").fetchone()
     if not row:
         return list(DEFAULT_ROOMS)
-    return [r for r in json.loads(row["value"]) if r in DEPARTMENTS]
+    return [r for r in json.loads(row["value"]) if r in ROOMS]
 
 
 def sculpture(conn: sqlite3.Connection) -> bool:
@@ -48,7 +49,7 @@ def _set(conn: sqlite3.Connection, key: str, value) -> None:
 
 def set_rooms(conn: sqlite3.Connection, enabled: list[int], with_sculpture: bool | None = None) -> list[Path]:
     """Save what to draw from. Drops waiting candidates that no longer fit."""
-    _set(conn, "rooms", [r for r in dict.fromkeys(enabled) if r in DEPARTMENTS])
+    _set(conn, "rooms", [r for r in dict.fromkeys(enabled) if r in ROOMS])
     if with_sculpture is not None:
         _set(conn, "sculpture", with_sculpture)
     return prune_candidates(conn)

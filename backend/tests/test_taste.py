@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 from app import store, taste
-from app.met import DEPARTMENTS
+from app.sources import ROOMS as DEPARTMENTS
 
 
 def verdicts(conn, room: int, kept: int, passed: int, start: int) -> int:
