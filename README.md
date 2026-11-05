@@ -47,7 +47,7 @@ cd frontend && npm run check            # svelte-check
 
 ## On the Pi
 
-`scripts/magpie` drives the Pi over SSH. Link it onto your PATH (`ln -s "$PWD/scripts/magpie" ~/bin/magpie`).
+`scripts/magpie` drives the Pi over SSH. It is linked onto the PATH as `~/.local/bin/magpie`.
 
 ```bash
 magpie status       # app, Caddy, hoard, Claude spend, backups, certificate, temperature
