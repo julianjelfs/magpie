@@ -39,8 +39,11 @@ TAG_EFFORT = os.environ.get("MAGPIE_TAG_EFFORT", "low")
 # How many prepared pieces to keep waiting that no device has seen yet.
 CANDIDATE_BUFFER = int(os.environ.get("MAGPIE_CANDIDATE_BUFFER", "8"))
 
-# Long edge, in pixels, of the copy shown on the wall and kept in the hoard.
-DISPLAY_EDGE = 2000
-THUMB_EDGE = 640
+# Long edge, in pixels, of the copy shown on the wall and kept in the hoard. Seen on the
+# web and zoomed a little at most, so sharp at full height on most screens and no more:
+# a few hundred KB a piece.
+DISPLAY_EDGE = 1600
+DISPLAY_QUALITY = 80
+THUMB_EDGE = 480
 # Claude reads images at up to about this size; anything larger is resized on their side.
 CLAUDE_EDGE = 1568

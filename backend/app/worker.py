@@ -125,7 +125,7 @@ class Worker:
                 raw = await self.source.download(meta["image_url"])
                 prepared = await asyncio.to_thread(images.prepare, raw)
                 images.write(target, prepared.jpeg)
-            thumb = await asyncio.to_thread(images.resized, target, config.THUMB_EDGE, 80)
+            thumb = await asyncio.to_thread(images.resized, target, config.THUMB_EDGE, 78)
             images.write(images.thumb_path(key), thumb)
         except asyncio.CancelledError:
             raise

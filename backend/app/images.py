@@ -63,7 +63,7 @@ def _jpeg(img: Image.Image, quality: int = 84) -> bytes:
 
 def prepare(raw: bytes, edge: int = config.DISPLAY_EDGE) -> Prepared:
     img = _open(raw, edge)
-    return Prepared(jpeg=_jpeg(img), width=img.width, height=img.height, wall_colour=wall_colour(img))
+    return Prepared(jpeg=_jpeg(img, config.DISPLAY_QUALITY), width=img.width, height=img.height, wall_colour=wall_colour(img))
 
 
 def resized(path: Path, edge: int, quality: int = 82) -> bytes:
