@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Control Magpie, which runs on the Pi. Everything here drives that machine over SSH;
+# nothing in this repo runs the app on the laptop except scripts/dev.sh.
+set -euo pipefail
+
+PI="${MAGPIE_PI_HOST:-julian_jelfs@pi.local}"
+REMOTE="magpie"
+# One URL at home and away: the Pi's Tailscale subnet route carries it over the tailnet.
+HOUSE_URL="https://magpie.julianjelfs.co.uk"
+ROOT="$(cd "$(dirname "$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}")")/.." && pwd)"
+
+on_pi() { ssh -o BatchMode=yes -o ConnectTimeout=10 "$PI" "$@"; }
+
+wait_healthy() {
+	for _ in $(seq 1 40); do
+		on_pi "curl -sf -m 1 http://127.0.0.1:8060/api/health" >/dev/null 2>&1 && return 0
+		sleep 0.5
+	done
+	on_pi "curl -sf -m 3 http://127.0.0.1:8060/api/health" >/dev/null
+}
+
+case "${1:-open}" in
+	open) open "$HOUSE_URL" ;;
+	url) echo "$HOUSE_URL" ;;
+	ssh) exec ssh "$PI" ;;
+
+	status)
+		on_pi '
+			printf "app        : %s\n" "$(systemctl is-active magpie)"
+			printf "caddy      : %s\n" "$(systemctl is-active caddy)"
+			if curl -sf -m 3 http://127.0.0.1:8060/api/health >/dev/null; then
+				printf "api        : responding on 127.0.0.1:8060\n"
+			else
+				printf "api        : NOT responding\n"
+			fi
+			python3 ~/magpie/deploy/stats.py
+			printf "pictures   : %s\n" "$(du -sh ~/magpie/backend/images 2>/dev/null | cut -f1)"
+			n=$(ls -1 ~/magpie-backups/magpie-*.db 2>/dev/null | wc -l | tr -d " ")
+			if [ "$n" = 0 ]; then
+				printf "backups    : none yet\n"
+			else
+				printf "backups    : %s, newest %s\n" "$n" "$(ls -1t ~/magpie-backups/magpie-*.db | head -1 | xargs -r basename)"
+			fi
+			printf "next backup: %s\n" "$(systemctl list-timers magpie-backup --no-pager 2>/dev/null | awk "NR==2 {print \$1, \$2, \$3}")"
+			end=$(echo | openssl s_client -connect 127.0.0.1:443 -servername magpie.julianjelfs.co.uk 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+			printf "certificate: %s\n" "${end:-not found}"
+			printf "disk       : %s free\n" "$(df -h / | awk "NR==2 {print \$4}")"
+			printf "cpu temp   : %.1fC\n" "$(awk "{print \$1/1000}" /sys/class/thermal/thermal_zone0/temp)"
+			printf "uptime     : %s\n" "$(uptime -p)"
+		'
+		echo "url        : $HOUSE_URL"
+		;;
+
+	logs) on_pi "sudo journalctl -u magpie -n ${2:-40} -f" ;;
+
+	start)   on_pi "sudo systemctl start magpie"; echo "started" ;;
+	stop)    on_pi "sudo systemctl stop magpie"; echo "stopped" ;;
+	restart) on_pi "sudo systemctl restart magpie"; echo "restarted" ;;
+
+	rebuild)
+		# The Pi never builds the frontend: Vite stays on the laptop.
+		if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+			echo "warning: uncommitted changes here; the Pi pulls from GitHub and will not see them" >&2
+		fi
+		echo "==> pulling code on the Pi"
+		on_pi "cd $REMOTE && git pull -q && git log --oneline -1"
+		echo "==> syncing backend dependencies"
+		on_pi "cd $REMOTE/backend && ~/.local/bin/uv sync -q --no-dev && echo ok"
+		echo "==> building the frontend here"
+		(cd "$ROOT/frontend" && npm install --silent && npm run build >/dev/null)
+		echo "==> copying the build across"
+		rsync -az --delete -e "ssh -o BatchMode=yes" "$ROOT/frontend/dist/" "$PI:$REMOTE/frontend/dist/"
+		echo "==> restarting"
+		on_pi "sudo systemctl restart magpie"
+		wait_healthy && echo "done, service healthy. Reload the page." \
+			|| { echo "service did not come back; try: magpie logs"; exit 1; }
+		;;
+
+	backup)
+		echo "==> taking a backup on the Pi"
+		on_pi "sudo systemctl start magpie-backup && sudo journalctl -u magpie-backup -n 3 --no-pager | tail -2"
+		echo "==> pulling it here"
+		bash "$ROOT/deploy/pull-backups.sh"
+		;;
+
+	pull) bash "$ROOT/deploy/pull-backups.sh" ;;
+
+	*)
+		cat <<'USAGE'
+magpie: the art library, running on the Pi
+
+  magpie              open it in a browser
+  magpie status       app, Caddy, hoard, Claude spend, backups, certificate, temperature
+  magpie url          print the URL
+  magpie rebuild      after changing code: pull on the Pi, build the UI here, restart
+  magpie logs [n]     follow the app log
+  magpie backup       take a backup now and pull it to this laptop
+  magpie pull         pull existing backups to this laptop
+  magpie ssh          shell onto the Pi
+  magpie start|stop|restart
+USAGE
+		;;
+esac

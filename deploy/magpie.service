@@ -1,0 +1,29 @@
+# Magpie, as a systemd service on the Pi.
+#
+# Binds loopback only. Caddy is the one process listening on the network, and its
+# config lives in the recipe-for-disaster repo because one file serves every app.
+# Install with deploy/install-pi.sh; don't edit the copy in /etc.
+
+[Unit]
+Description=Magpie
+Documentation=https://github.com/julianjelfs/magpie
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=julian_jelfs
+WorkingDirectory=/home/julian_jelfs/magpie/backend
+# ANTHROPIC_API_KEY for tagging. Optional, so a box without it still starts.
+EnvironmentFile=-/home/julian_jelfs/magpie/backend/.env
+# Straight at the venv, not `uv run`: uv re-resolves the environment on every start,
+# which costs a Pi 4 about twelve seconds before uvicorn gets a look in.
+ExecStart=/home/julian_jelfs/magpie/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8060
+Restart=always
+RestartSec=2
+# SD cards die of writes. Journal only.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

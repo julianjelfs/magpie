@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+dist/
+__pycache__/
+.venv/
+.pytest_cache/
+.env
+*.db
+*.db-shm
+*.db-wal
+*.db.backup-*
+backend/images/
+backend/cache/

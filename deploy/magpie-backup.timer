@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly Magpie database backup
+
+[Timer]
+# Twenty minutes after barre none's, so two SQLite copies never overlap.
+OnCalendar=*-*-* 05:15:00
+# Catch up after a power cut.
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

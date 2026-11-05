@@ -1,0 +1,355 @@
+<script lang="ts">
+  import { app } from './app.svelte';
+  import Label from './Label.svelte';
+  import type { Verdict } from './types';
+
+  let { active }: { active: boolean } = $props();
+
+  const piece = $derived(app.current);
+  const THRESHOLD = 90;
+
+  let leaving = $state<Verdict | null>(null);
+  let dx = $state(0);
+  let dragging = $state(false);
+  let loaded = $state(false);
+  let broken = $state(false);
+  let startX = 0;
+
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function decide(verdict: Verdict) {
+    if (!piece || leaving) return;
+    leaving = verdict;
+    setTimeout(
+      () => {
+        app.decide(verdict);
+        leaving = null;
+        dx = 0;
+        loaded = false;
+        broken = false;
+      },
+      reduced() ? 0 : verdict === 'keep' ? 460 : 300
+    );
+  }
+
+  function onKey(event: KeyboardEvent) {
+    if (!active || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (document.querySelector('dialog[open]')) return;
+    if (event.key === 'ArrowRight' || event.key === 'k') decide('keep');
+    else if (event.key === 'ArrowLeft' || event.key === 'p') decide('pass');
+  }
+
+  function down(event: PointerEvent) {
+    if (leaving || event.button !== 0) return;
+    dragging = true;
+    startX = event.clientX;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  function move(event: PointerEvent) {
+    if (dragging) dx = event.clientX - startX;
+  }
+
+  function up() {
+    if (!dragging) return;
+    dragging = false;
+    if (dx > THRESHOLD) decide('keep');
+    else if (dx < -THRESHOLD) decide('pass');
+    else dx = 0;
+  }
+
+  const leaning = $derived(dx > THRESHOLD ? 'keep' : dx < -THRESHOLD ? 'pass' : null);
+</script>
+
+<svelte:window onkeydown={onKey} />
+
+<section class="look" aria-label="Look">
+  <div class="stage">
+    {#if piece}
+      {#key piece.key}
+        <figure
+          class="hang"
+          class:keep={leaving === 'keep'}
+          class:pass={leaving === 'pass'}
+          class:dragging
+          style:--dx="{dx}px"
+        >
+          <div
+            class="art"
+            class:loaded
+            role="presentation"
+            onpointerdown={down}
+            onpointermove={move}
+            onpointerup={up}
+            onpointercancel={up}
+          >
+            {#if broken}
+              <p class="broken">
+                This picture didn't reach the device before the Pi went out of reach. You can still keep or pass it.
+              </p>
+            {:else}
+              <img
+                src={piece.image}
+                alt={`${piece.title}${piece.artist ? `, by ${piece.artist}` : ''}`}
+                width={piece.width}
+                height={piece.height}
+                draggable="false"
+                onload={() => (loaded = true)}
+                onerror={() => (broken = true)}
+              />
+            {/if}
+          </div>
+          <figcaption><Label {piece} /></figcaption>
+        </figure>
+      {/key}
+    {:else if app.fetching || app.reachable}
+      <p class="waiting">Fetching something from the Met…</p>
+    {:else}
+      <div class="waiting">
+        <p>You've seen everything this device saved for later.</p>
+        <p class="soft">New pieces come through the Pi, which is out of reach. Your hoard is still here.</p>
+        <a href="#/hoard">Open the hoard</a>
+      </div>
+    {/if}
+  </div>
+
+  <div class="verdicts">
+    <button class="pass" class:leaning={leaning === 'pass'} onclick={() => decide('pass')} disabled={!piece}>
+      Pass <kbd aria-hidden="true">←</kbd>
+    </button>
+    <button class="keep" class:leaning={leaning === 'keep'} onclick={() => decide('keep')} disabled={!piece}>
+      Keep <kbd aria-hidden="true">→</kbd>
+    </button>
+  </div>
+</section>
+
+<style>
+  .look {
+    --bar: 64px;
+    --verdicts: 96px;
+    min-height: calc(100dvh - var(--bar));
+    display: grid;
+    grid-template-rows: 1fr var(--verdicts);
+    position: relative;
+  }
+
+  /* Gallery light, falling from above. */
+  .look::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 70% 55% at 50% 0%, rgb(255 255 255 / 0.09), transparent 70%);
+  }
+
+  .stage {
+    display: grid;
+    place-items: center;
+    padding: 8px var(--gutter) 0;
+    min-height: 0;
+  }
+
+  .hang {
+    --art-h: calc(100dvh - var(--bar) - var(--verdicts) - 24px);
+    --art-w: calc(100vw - 2 * var(--gutter) - 248px - 32px);
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 32px;
+    max-width: 100%;
+    animation: arrive 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transform: translateX(var(--dx)) rotate(calc(var(--dx) / 60 * 1deg));
+    transition: transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .hang.dragging {
+    transition: none;
+  }
+
+  /* Kept: pocketed, up towards the hoard. */
+  .hang.keep {
+    transform: translate(28vw, -42vh) scale(0.12);
+    opacity: 0;
+    transition:
+      transform 460ms cubic-bezier(0.55, 0, 0.75, 0.2),
+      opacity 460ms ease-in;
+  }
+
+  /* Passed: set aside. */
+  .hang.pass {
+    transform: translateX(-14vw) rotate(-3deg);
+    opacity: 0;
+    transition:
+      transform 300ms ease-in,
+      opacity 300ms ease-in;
+  }
+
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+  }
+
+  .art {
+    min-width: 0;
+    touch-action: pan-y;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .dragging .art {
+    cursor: grabbing;
+  }
+
+  img {
+    display: block;
+    /* Not 100%: the frame sizes itself to the picture, so a percentage here goes circular. */
+    max-width: var(--art-w);
+    max-height: var(--art-h);
+    width: auto;
+    height: auto;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.06),
+      0 24px 48px -12px rgb(0 0 0 / 0.55);
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+
+  .loaded img {
+    opacity: 1;
+  }
+
+  figcaption {
+    flex: none;
+    width: 248px;
+  }
+
+  .broken,
+  .waiting {
+    max-width: 34ch;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    text-align: center;
+    color: var(--on-wall-soft);
+  }
+
+  .waiting p {
+    margin: 0 0 10px;
+  }
+
+  .waiting .soft {
+    font-style: normal;
+    font-family: var(--sans);
+    font-size: 15px;
+  }
+
+  .waiting a {
+    font-family: var(--sans);
+    font-style: normal;
+    font-size: 15px;
+    color: var(--on-wall);
+  }
+
+  .verdicts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding: 0 var(--gutter) env(safe-area-inset-bottom);
+  }
+
+  .verdicts button {
+    min-width: 132px;
+    padding: 13px 26px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 560;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    justify-content: center;
+    gap: 10px;
+    transition:
+      transform 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .verdicts button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .pass {
+    background: transparent;
+    border: 1px solid var(--on-wall-faint);
+    color: var(--on-wall);
+  }
+
+  .pass:hover:not(:disabled),
+  .pass.leaning {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  .keep {
+    background: var(--paper);
+    border: 1px solid var(--paper);
+    color: var(--ink);
+  }
+
+  .keep:hover:not(:disabled) {
+    background: #fff;
+  }
+
+  .leaning {
+    transform: scale(1.06);
+  }
+
+  @media (hover: none) {
+    kbd {
+      display: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .look {
+      --bar: 56px;
+      --verdicts: 88px;
+    }
+
+    .stage {
+      display: flex;
+      flex-direction: column;
+      padding-top: 4px;
+      overflow-y: auto;
+    }
+
+    /* Auto margins centre it while there is room, and never clip the top when there isn't. */
+    .hang {
+      margin: auto 0;
+      --art-h: 56dvh;
+      --art-w: calc(100vw - 2 * var(--gutter));
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 12px;
+    }
+
+    figcaption {
+      width: min(100%, 420px);
+    }
+
+    .verdicts {
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(transparent, var(--wall) 30%);
+      transition: background var(--wall-change) ease;
+    }
+
+    .verdicts button {
+      flex: 1;
+      max-width: 200px;
+    }
+  }
+</style>
