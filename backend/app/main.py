@@ -13,7 +13,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import config, db, images, store
+from . import config, db, images, store, taste
 from .met import DEPARTMENTS, Met
 from .schemas import DecisionBatch, Rooms
 from .tagger import ClaudeTagger
@@ -107,6 +107,12 @@ def retry(key: str) -> dict:
             raise HTTPException(404, "That piece isn't in the hoard.")
     poke()
     return {"ok": True}
+
+
+@app.get("/api/taste")
+def get_taste() -> dict:
+    with db.session() as conn:
+        return taste.summary(conn, store.rooms(conn))
 
 
 @app.get("/api/rooms")

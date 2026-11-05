@@ -62,6 +62,21 @@ DEPARTMENTS: dict[int, str] = {
     21: "Modern and Contemporary Art",
 }
 
+# Object records name some departments differently from the department list.
+RECORD_NAMES: dict[str, int] = {
+    **{name: room for room, name in DEPARTMENTS.items()},
+    "The American Wing": 1,
+    "Ancient Near Eastern Art": 3,
+    "The Michael C. Rockefeller Wing": 5,
+    "Robert Lehman Collection": 15,
+}
+
+
+def room_of(meta: dict) -> int | None:
+    """The room a piece came from: recorded on newer pieces, worked out from the name on older ones."""
+    return meta.get("room") or RECORD_NAMES.get(meta.get("department", ""))
+
+
 # Pictures first: these are the rooms most likely to hold something worth sketching.
 DEFAULT_ROOMS = [11, 9, 6, 21, 15, 14, 19]
 
@@ -267,14 +282,24 @@ class Met:
         return response.json()
 
     async def random_draft(
-        self, rooms: list[int], skip: set[str], sculpture: bool = False, attempts: int = 12
+        self,
+        rooms: list[int],
+        skip: set[str],
+        sculpture: bool = False,
+        weights: list[float] | None = None,
+        highlight_share: float = HIGHLIGHT_SHARE,
+        attempts: int = 12,
     ) -> Draft | None:
-        """A usable piece from one of the rooms, not in skip. None after too many misses."""
+        """A usable piece from one of the rooms, not in skip. None after too many misses.
+
+        weights, one per room, make some rooms come up more often than others.
+        """
         if not rooms:
             return None
         for _ in range(attempts):
-            room = random.choice(rooms)
-            ids = await self.highlight_ids(room) if random.random() < HIGHLIGHT_SHARE else []
+            room = random.choices(rooms, weights=weights)[0]
+            ids = await self.highlight_ids(room) if random.random() < highlight_share else []
+            ids = [i for i in ids if piece_key(i) not in skip and i not in self.rejected]
             if not ids:
                 ids = await self.room_ids(room, sculpture)
             if not ids:
@@ -285,6 +310,7 @@ class Met:
             obj = await self.get_object(object_id)
             draft = describe(obj, sculpture) if obj else None
             if draft:
+                draft.meta["room"] = room
                 return draft
             # Sculpture may be switched on later, so only remember what can never be used.
             if not obj or describe(obj, sculpture=True) is None:

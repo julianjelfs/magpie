@@ -14,7 +14,7 @@ import logging
 from collections.abc import Callable
 from typing import Protocol
 
-from . import config, db, images, store
+from . import config, db, images, store, taste
 from .met import Draft
 from .tagger import Tagger, TagError
 
@@ -22,7 +22,14 @@ log = logging.getLogger(__name__)
 
 
 class Source(Protocol):
-    async def random_draft(self, rooms: list[int], skip: set[str], sculpture: bool = False) -> Draft | None: ...
+    async def random_draft(
+        self,
+        rooms: list[int],
+        skip: set[str],
+        sculpture: bool = False,
+        weights: list[float] | None = None,
+        highlight_share: float = 0.25,
+    ) -> Draft | None: ...
     async def download(self, url: str) -> bytes: ...
 
 
@@ -67,16 +74,20 @@ class Worker:
                 rooms = store.rooms(conn)
                 with_sculpture = store.sculpture(conn)
                 skip = store.known_keys(conn)
-            if await self.prepare_one(rooms, skip, with_sculpture):
+                # Rooms you keep more from come up more often.
+                steer = {"weights": taste.room_weights(conn, rooms), "highlight_share": taste.highlight_share(conn)}
+            if await self.prepare_one(rooms, skip, with_sculpture, steer):
                 misses = 0
             else:
                 misses += 1
             # Finish kept pieces between candidates, so a keep never waits for a full buffer.
             await self.finish_hoard()
 
-    async def prepare_one(self, rooms: list[int], skip: set[str], sculpture: bool = False) -> bool:
+    async def prepare_one(
+        self, rooms: list[int], skip: set[str], sculpture: bool = False, steer: dict | None = None
+    ) -> bool:
         try:
-            draft = await self.source.random_draft(rooms, skip, sculpture)
+            draft = await self.source.random_draft(rooms, skip, sculpture, **(steer or {}))
             if not draft:
                 return False
             raw = await self.source.download(draft.image_url)

@@ -9,6 +9,11 @@ It runs on the Raspberry Pi at **https://magpie.julianjelfs.co.uk**. That one UR
 - **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe the picture on a phone. The label beside each piece is the Met's own record, with a link to its page.
 - **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. About a quarter of picks come from the Met's highlights in those rooms.
 - **Hoard**: every kept piece, filterable by tag. Open a piece for its tags and sketching notes, or to let it go. A piece you let go of is never offered again.
+- **What you keep** (linked from the hoard): how often you keep what you're shown, by room, century, kind and highlights, plus artists kept more than once. It also shows how new pieces are being steered.
+
+## Steering
+
+Rooms you keep more from come up more often. A room's weight is its keep rate, smoothed towards your overall keep rate (ten pretend verdicts at that rate), so a room seen twice and kept once doesn't leap to the top and a room not yet tried isn't punished. Every open room gets at least 5% of picks. The share of picks drawn from the Met's highlights moves between 10% and 40% depending on whether you keep more highlights than other pieces; it stays at 25% until there are 30 verdicts. Both use the museum record stored with every verdict, passes included, so steering costs no extra requests. The numbers live in `backend/app/taste.py`.
 
 ## Offline
 
@@ -32,6 +37,7 @@ Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly ba
 6. A verdict given with the Pi out of reach survives a reload and reaches the Pi when it is back. `outbox.test.ts`, "invariant 6"
 7. A kept piece whose picture is lost from disk gets it back. `test_invariant_7_a_kept_piece_whose_picture_is_lost_is_fetched_again`
 8. Only pictures are offered, and sculpture only when it is switched on. `test_invariant_8_only_pictures_are_offered_and_sculpture_only_when_on`
+9. Steering favours rooms you keep from, and never gives an open room less than 5% of picks. `test_invariant_9_steering_favours_kept_rooms_and_never_shuts_one_out`
 
 The Anthropic API key never reaches the browser or the repo. It lives only in `backend/.env` (gitignored, mode 600) on the Pi and the laptop.
 
@@ -39,7 +45,7 @@ The Anthropic API key never reaches the browser or the repo. It lives only in `b
 
 ```bash
 scripts/dev.sh                          # API on :8060, Vite on :5180
-cd backend && uv run pytest             # invariants 1-5, 7 and 8
+cd backend && uv run pytest             # invariants 1-5 and 7-9
 cd frontend && npm test                 # invariant 6
 cd frontend && npm run check            # svelte-check
 ```

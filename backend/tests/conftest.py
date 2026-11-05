@@ -43,7 +43,7 @@ class FakeSource:
     def __init__(self):
         self.n = 1000
 
-    async def random_draft(self, rooms, skip, sculpture=False):
+    async def random_draft(self, rooms, skip, sculpture=False, weights=None, highlight_share=0.25):
         self.n += 1
         return Draft(key=f"met-{self.n}", meta=meta(self.n), image_url=meta(self.n)["image_url"])
 

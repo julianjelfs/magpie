@@ -33,6 +33,7 @@
     <h1 id="hoard-title">Hoard</h1>
     <p class="count">
       {pieces.length === 1 ? 'One piece' : `${pieces.length} pieces`}{#if sentence}. {sentence}{/if}
+      <a class="taste-link" href="#/taste">What you keep</a>
     </p>
     {#if !app.reachable}
       <p class="offline">
@@ -127,6 +128,13 @@
     color: var(--on-wall-soft);
     font-size: 16px;
     max-width: 60ch;
+  }
+
+  .taste-link {
+    margin-left: 12px;
+    color: var(--on-wall);
+    text-underline-offset: 3px;
+    white-space: nowrap;
   }
 
   .offline {

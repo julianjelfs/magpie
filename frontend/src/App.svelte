@@ -6,6 +6,7 @@
   import Mark from './lib/Mark.svelte';
   import PieceView from './lib/PieceView.svelte';
   import Rooms from './lib/Rooms.svelte';
+  import Taste from './lib/Taste.svelte';
 
   const HOARD_WALL = '#28302d';
 
@@ -16,6 +17,7 @@
     const parts = hash.replace(/^#\/?/, '').split('/');
     if (parts[0] === 'hoard' && parts[1]) return { name: 'piece' as const, key: parts[1] };
     if (parts[0] === 'hoard') return { name: 'hoard' as const };
+    if (parts[0] === 'taste') return { name: 'taste' as const };
     return { name: 'look' as const };
   });
 
@@ -86,6 +88,8 @@
     {/if}
   {:else if route.name === 'hoard'}
     <Hoard />
+  {:else if route.name === 'taste'}
+    <Taste />
   {/if}
   <!-- Kept mounted so the queue and its preloaded pictures survive a trip to the hoard. -->
   <div hidden={route.name !== 'look'}>

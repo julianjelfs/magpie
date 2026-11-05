@@ -46,6 +46,21 @@ export const fetchHoard = () => call<{ pieces: Kept[] }>('/api/hoard').then((r) 
 
 export const retryPiece = (key: string) => call(`/api/hoard/${key}/retry`, { method: 'POST' });
 
+export type Group = { name: string; kept: number; seen: number };
+
+export type Taste = {
+  seen: number;
+  kept: number;
+  rooms: Group[];
+  centuries: Group[];
+  kinds: Group[];
+  highlights: Group[];
+  artists: { name: string; kept: number }[];
+  steering: { rooms: { name: string; share: number }[]; highlights: number };
+};
+
+export const fetchTaste = () => call<Taste>('/api/taste');
+
 export type RoomSettings = { rooms: Room[]; sculpture: boolean };
 
 export const fetchRooms = () => call<RoomSettings>('/api/rooms');

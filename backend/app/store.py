@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import images
-from .met import DEFAULT_ROOMS, DEPARTMENTS, is_picture
+from .met import DEFAULT_ROOMS, DEPARTMENTS, is_picture, room_of
 from .schemas import Decision
 
 FACETS = ["period", "movement", "region", "medium", "technique", "subject"]
@@ -56,13 +56,13 @@ def set_rooms(conn: sqlite3.Connection, enabled: list[int], with_sculpture: bool
 
 def prune_candidates(conn: sqlite3.Connection) -> list[Path]:
     """Drop waiting candidates from closed rooms, or that aren't pictures. Returns their files."""
-    names = {DEPARTMENTS[r] for r in rooms(conn)}
+    open_rooms = set(rooms(conn))
     with_sculpture = sculpture(conn)
     stale = []
     for row in conn.execute("SELECT piece_key, meta FROM candidate WHERE served_at IS NULL").fetchall():
         meta = json.loads(row["meta"])
         fits = is_picture(meta.get("classification", ""), meta.get("object_name", ""), with_sculpture)
-        if meta.get("department") not in names or not fits:
+        if room_of(meta) not in open_rooms or not fits:
             stale.append(row["piece_key"])
     for key in stale:
         conn.execute("DELETE FROM candidate WHERE piece_key = ?", (key,))
