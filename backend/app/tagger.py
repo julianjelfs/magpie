@@ -12,7 +12,7 @@ import anthropic
 from . import config
 from .store import FACETS
 
-# Claude Opus 5.5 list prices per million tokens, as of October 2026.
+# List prices per million tokens (input, output), as of October 2026.
 PRICES = {"claude-opus-5-5": (4.00, 20.00), "claude-sonnet-5-5": (2.00, 10.00), "claude-haiku-5-5": (0.10, 0.50)}
 
 SYSTEM = """You catalogue art for one person's private collection. They have just chosen to keep \

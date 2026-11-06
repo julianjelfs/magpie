@@ -31,9 +31,10 @@ def ui_dir() -> Path:
     return Path(override) if override else BACKEND_DIR.parent / "frontend" / "dist"
 
 
-# Claude tags each kept piece. Opus at low effort: tagging is quick work, but
-# naming a movement from a picture rewards the stronger model.
-TAG_MODEL = os.environ.get("MAGPIE_TAG_MODEL", "claude-opus-5-5")
+# Claude tags each kept piece. Sonnet at low effort: on twelve hoard pieces tagged
+# side by side (November 2026) it matched Opus on period every time and on movement
+# ten times in twelve, with notes as good, at half the cost.
+TAG_MODEL = os.environ.get("MAGPIE_TAG_MODEL", "claude-sonnet-5-5")
 TAG_EFFORT = os.environ.get("MAGPIE_TAG_EFFORT", "low")
 
 # How many prepared pieces to keep waiting that no device has seen yet.
