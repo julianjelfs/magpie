@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS candidate (
     served_at   TEXT
 );
 
+-- Every charge for tagging, one row per call to Claude. Kept apart from the
+-- piece so letting a piece go, or tagging it again, never loses what was spent.
+CREATE TABLE IF NOT EXISTS spend (
+    id        INTEGER PRIMARY KEY,
+    at        TEXT NOT NULL,              -- ISO 8601 UTC
+    piece_key TEXT NOT NULL,
+    model     TEXT NOT NULL,
+    cost_usd  REAL NOT NULL
+);
+
 -- One row per preference. A missing key means the default.
 CREATE TABLE IF NOT EXISTS preference (
     key   TEXT PRIMARY KEY,
@@ -80,6 +90,12 @@ def connect(path: Path | None = None) -> sqlite3.Connection:
 def initialise(path: Path | None = None) -> None:
     with connect(path) as conn:
         conn.executescript(SCHEMA)
+        # Before the ledger existed, cost lived only on the piece. Carry it across once.
+        if not conn.execute("SELECT 1 FROM spend LIMIT 1").fetchone():
+            conn.execute(
+                "INSERT INTO spend (at, piece_key, model, cost_usd) "
+                "SELECT kept_at, piece_key, tag_model, tag_cost_usd FROM piece WHERE tag_cost_usd IS NOT NULL"
+            )
 
 
 @contextmanager

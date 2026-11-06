@@ -57,6 +57,7 @@ export type Taste = {
   highlights: Group[];
   artists: { name: string; kept: number }[];
   steering: { rooms: { name: string; share: number }[]; highlights: number };
+  spend: { total_usd: number; month_usd: number; calls: number; per_piece_usd: number | null };
 };
 
 export const fetchTaste = () => call<Taste>('/api/taste');

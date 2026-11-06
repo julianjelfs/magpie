@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from . import images
@@ -234,6 +234,26 @@ def save_tags(
         "WHERE piece_key = ?",
         (note, model, cost, key),
     )
+    if cost is not None:
+        conn.execute(
+            "INSERT INTO spend (at, piece_key, model, cost_usd) VALUES (?, ?, ?, ?)",
+            (datetime.now(timezone.utc).isoformat(timespec="seconds"), key, model, cost),
+        )
+
+
+def spend(conn: sqlite3.Connection, today: date | None = None) -> dict:
+    """What tagging has cost: this calendar month (UTC) and in all."""
+    month = (today or datetime.now(timezone.utc).date()).strftime("%Y-%m")
+    total, calls = conn.execute("SELECT coalesce(sum(cost_usd), 0), count(*) FROM spend").fetchone()
+    this_month = conn.execute(
+        "SELECT coalesce(sum(cost_usd), 0) FROM spend WHERE substr(at, 1, 7) = ?", (month,)
+    ).fetchone()[0]
+    return {
+        "total_usd": round(total, 2),
+        "month_usd": round(this_month, 2),
+        "calls": calls,
+        "per_piece_usd": round(total / calls, 3) if calls else None,
+    }
 
 
 def retry(conn: sqlite3.Connection, key: str) -> bool:

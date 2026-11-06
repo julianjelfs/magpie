@@ -26,6 +26,9 @@
 
   const oneIn = $derived(taste && taste.kept ? Math.round(taste.seen / taste.kept) : null);
 
+  const usd = (x: number) => `$${x.toFixed(2)}`;
+  const cents = (x: number) => (x < 0.1 ? `${(x * 100).toFixed(1)}¢` : usd(x));
+
   const sections = $derived(
     taste
       ? [
@@ -97,6 +100,23 @@
       </section>
     </div>
     <p class="note">Faded rows have fewer than {FEW} pieces behind them: too few to say much.</p>
+
+    <section class="spend" aria-labelledby="spend-title">
+      <h2 id="spend-title">What tagging costs</h2>
+      {#if taste.spend.calls}
+        <p>
+          <span class="figure">{usd(taste.spend.month_usd)}</span> this month,
+          <span class="figure">{usd(taste.spend.total_usd)}</span> in all, about
+          <span class="figure">{cents(taste.spend.per_piece_usd ?? 0)}</span> for each piece Claude tags.
+        </p>
+        <p class="note">
+          Only keeps are tagged, so passing costs nothing. Worked out from Anthropic's list prices and the tokens each
+          call used; the bill in the Anthropic Console is the final word.
+        </p>
+      {:else}
+        <p class="note">Nothing yet. Claude tags each piece you keep, for a couple of cents.</p>
+      {/if}
+    </section>
   {/if}
 </section>
 
@@ -204,6 +224,27 @@
     font-size: 14px;
     margin: 10px 0 0;
     max-width: 60ch;
+  }
+
+  .spend {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--on-wall-faint);
+    max-width: 62ch;
+  }
+
+  .spend p {
+    margin: 0;
+  }
+
+  .spend .note {
+    margin-top: 8px;
+  }
+
+  .figure {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
   }
 
   .steer .note:first-of-type {

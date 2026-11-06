@@ -21,7 +21,7 @@ The installed app opens with the Pi out of reach. It keeps six pieces on the dev
 
 ## How it works
 
-One FastAPI process on `127.0.0.1:8060` serves the API and the built Svelte app. Caddy terminates TLS in front of it. A background task keeps eight pieces ready: it draws a random object from a department's ID list (cached for a week), shrinks the Met's original (often 8MB or more) to 2000px, and picks a wall colour from the picture. When you keep a piece, the task moves that picture into `backend/images/hoard/`, makes a thumbnail and sends a 1568px copy, with the museum record and the hoard's existing tags, to Claude Opus 5.5 at low effort. Tagging costs about two cents a piece; `magpie status` shows the running total.
+One FastAPI process on `127.0.0.1:8060` serves the API and the built Svelte app. Caddy terminates TLS in front of it. A background task keeps eight pieces ready: it draws a random object from a department's ID list (cached for a week), shrinks the Met's original (often 8MB or more) to 2000px, and picks a wall colour from the picture. When you keep a piece, the task moves that picture into `backend/images/hoard/`, makes a thumbnail and sends a 1568px copy, with the museum record and the hoard's existing tags, to Claude Opus 5.5 at low effort. Tagging costs about two cents a piece. Every charge goes in a `spend` ledger, apart from the piece, so the total survives letting a piece go; the taste page and `magpie status` show it.
 
 The Met retired its v1 search on 2026-10-01. Rooms that hold only pictures (Drawings and Prints, European Paintings, Photographs) are listed whole from `/v1/objects?departmentIds=N`. Every other room is listed from v1.1 searches filtered by type (`medium=Paintings` and so on), because the v1.1 search stops at offset 10,000. Each fetched record is checked against the picture types before its image is downloaded. Objects that can never be used are remembered in `backend/cache/rejected.json` and never fetched again. The Met's firewall blocks the house IP for a few minutes after a burst of requests, so Magpie sends one a second and rests five minutes after a 403. The laptop shares that IP, so heavy use of the API from it starves the Pi.
 
@@ -41,6 +41,7 @@ Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly ba
 8. Only pictures are offered, and sculpture only when it is switched on. `test_invariant_8_only_pictures_are_offered_and_sculpture_only_when_on`
 9. Steering favours rooms you keep from, and never gives an open room less than 5% of picks. `test_invariant_9_steering_favours_kept_rooms_and_never_shuts_one_out`
 10. A modern painting is offered only once its artist has been dead for more than 70 full years. `test_invariant_10_only_artists_dead_more_than_70_years_are_offered`
+11. Money spent tagging stays in the running total, even after the piece is let go or tagged again. `test_invariant_11_what_tagging_cost_is_never_forgotten`
 
 The Anthropic API key never reaches the browser or the repo. It lives only in `backend/.env` (gitignored, mode 600) on the Pi and the laptop.
 

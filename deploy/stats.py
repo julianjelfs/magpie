@@ -20,7 +20,7 @@ passed = q("select count(*) from decision where verdict = 'pass'")
 ready = q("select count(*) from candidate where served_at is null")
 to_tag = q("select count(*) from piece where tag_status = 'pending'")
 failed = q("select count(*) from piece where tag_status = 'failed' or image_status = 'failed'")
-spent = q("select coalesce(sum(tag_cost_usd), 0) from piece")
+spent = q("select coalesce(sum(cost_usd), 0) from spend")
 
 print(f"hoard      : {kept} kept, {passed} passed")
 print(f"waiting    : {ready} pieces ready, {to_tag} to tag, {failed} failed")

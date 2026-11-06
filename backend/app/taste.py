@@ -13,6 +13,7 @@ import json
 import sqlite3
 from collections import Counter, defaultdict
 
+from . import store
 from .met import HIGHLIGHT_SHARE, room_of
 from .sources import ROOMS
 
@@ -130,4 +131,5 @@ def summary(conn: sqlite3.Connection, open_rooms: list[int]) -> dict:
             ),
             "highlights": round(highlight_share(conn), 3),
         },
+        "spend": store.spend(conn),
     }

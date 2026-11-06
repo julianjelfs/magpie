@@ -43,3 +43,20 @@ def test_older_pieces_are_matched_to_their_room_by_department_name(conn):
     store.set_rooms(conn, [15, 11])
 
     assert [p["key"] for p in store.take_candidates(conn, 10, set())] == ["met-1"]
+
+
+def test_invariant_11_what_tagging_cost_is_never_forgotten(conn):
+    from app.schemas import Decision
+
+    from .conftest import add_candidate, meta
+
+    key = add_candidate(conn, 1)
+    store.record_decisions(conn, [Decision(key=key, verdict="keep", decided_at="2026-11-05T10:00:00Z", meta=meta(1))])
+    store.save_tags(conn, key, {}, "", "claude-opus-5-5", 0.02)
+    store.save_tags(conn, key, {}, "", "claude-opus-5-5", 0.03)  # tagged again after a retry
+
+    # Then let go: the piece goes, the money spent on it doesn't.
+    store.record_decisions(conn, [Decision(key=key, verdict="pass", decided_at="2026-11-05T11:00:00Z", meta=meta(1))])
+
+    assert store.hoard(conn) == []
+    assert store.spend(conn)["total_usd"] == 0.05
