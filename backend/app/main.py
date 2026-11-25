@@ -14,7 +14,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db, images, store, taste
+from .cleveland import Cleveland
 from .met import Met
+from .smk import Smk
 from .sources import ROOMS, Sources
 from .wikidata import Wikidata
 from .schemas import DecisionBatch, Rooms
@@ -33,7 +35,8 @@ def make_worker() -> Worker:
     tagger = ClaudeTagger() if os.environ.get("ANTHROPIC_API_KEY") else None
     if not tagger:
         log.warning("ANTHROPIC_API_KEY is not set: kept pieces will wait, untagged")
-    return Worker(Sources(Met.create(config.cache_dir()), Wikidata.create(config.cache_dir())), tagger)
+    cache = config.cache_dir()
+    return Worker(Sources(Met.create(cache), Wikidata.create(cache), Cleveland.create(), Smk.create()), tagger)
 
 
 @asynccontextmanager

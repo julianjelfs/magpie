@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import images
 from .met import is_picture, room_of
-from .sources import DEFAULT_ROOMS, ROOMS
+from .sources import DEFAULT_ROOMS, FIRST_ROOMS, ROOMS
 from .schemas import Decision
 
 FACETS = ["period", "movement", "region", "medium", "technique", "subject"]
@@ -28,10 +28,15 @@ def _instant(value: str) -> datetime:
 
 
 def rooms(conn: sqlite3.Connection) -> list[int]:
+    """The open rooms. A room added to Magpie since the choice was saved starts open if
+    it is one of the defaults; a room that was there and left closed stays closed."""
     row = conn.execute("SELECT value FROM preference WHERE key = 'rooms'").fetchone()
     if not row:
         return list(DEFAULT_ROOMS)
-    return [r for r in json.loads(row["value"]) if r in ROOMS]
+    known = conn.execute("SELECT value FROM preference WHERE key = 'rooms_known'").fetchone()
+    known = set(json.loads(known["value"])) if known else set(FIRST_ROOMS)
+    saved = [r for r in json.loads(row["value"]) if r in ROOMS]
+    return saved + [r for r in DEFAULT_ROOMS if r not in known]
 
 
 def sculpture(conn: sqlite3.Connection) -> bool:
@@ -50,6 +55,7 @@ def _set(conn: sqlite3.Connection, key: str, value) -> None:
 def set_rooms(conn: sqlite3.Connection, enabled: list[int], with_sculpture: bool | None = None) -> list[Path]:
     """Save what to draw from. Drops waiting candidates that no longer fit."""
     _set(conn, "rooms", [r for r in dict.fromkeys(enabled) if r in ROOMS])
+    _set(conn, "rooms_known", sorted(ROOMS))
     if with_sculpture is not None:
         _set(conn, "sculpture", with_sculpture)
     return prune_candidates(conn)
@@ -175,6 +181,25 @@ def record_decisions(conn: sqlite3.Connection, decisions: list[Decision]) -> tup
         conn.execute("DELETE FROM candidate WHERE piece_key = ?", (d.key,))
         applied.append(d.key)
     return applied, unwanted
+
+
+def without_subjects(conn: sqlite3.Connection, limit: int) -> list[str]:
+    """Met verdicts recorded before subjects were kept, a few at a time."""
+    out: list[str] = []
+    for row in conn.execute("SELECT piece_key, source_meta FROM decision WHERE piece_key LIKE 'met-%'"):
+        if "subjects" not in json.loads(row["source_meta"]):
+            out.append(row["piece_key"])
+            if len(out) == limit:
+                break
+    return out
+
+
+def set_subjects(conn: sqlite3.Connection, key: str, subjects: list[str]) -> None:
+    for table, column in (("decision", "source_meta"), ("piece", "meta")):
+        row = conn.execute(f"SELECT {column} FROM {table} WHERE piece_key = ?", (key,)).fetchone()
+        if row:
+            meta = {**json.loads(row[0]), "subjects": subjects}
+            conn.execute(f"UPDATE {table} SET {column} = ? WHERE piece_key = ?", (json.dumps(meta), key))
 
 
 # ---------------------------------------------------------------- the hoard

@@ -5,7 +5,12 @@
 
   const maker = $derived(piece.artist || piece.culture || 'Unknown maker');
   const bio = $derived(piece.artist ? piece.artist_bio : piece.period);
-  const source = $derived(piece.source === 'wikidata' ? 'See it on Wikidata' : 'See it at the Met');
+  const SOURCES: Record<string, string> = {
+    wikidata: 'See it on Wikidata',
+    cleveland: 'See it at the Cleveland Museum of Art',
+    smk: 'See it at SMK'
+  };
+  const source = $derived(SOURCES[piece.source] ?? 'See it at the Met');
 </script>
 
 <!-- The tombstone label a museum hangs beside a piece. -->

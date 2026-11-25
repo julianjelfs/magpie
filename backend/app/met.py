@@ -30,6 +30,7 @@ import asyncio
 import json
 import logging
 import random
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -134,6 +135,15 @@ def is_picture(classification: str, object_name: str, sculpture: bool = False) -
     return sculpture and any(word in text for word in SCULPTURE_WORDS)
 
 
+def subjects_of(obj: dict) -> list[str]:
+    """The Met's subject terms for an object ("Landscapes", "Birds"). Many have none."""
+    return [t["term"] for t in obj.get("tags") or [] if t.get("term")]
+
+
+def artist_slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
 def describe(obj: dict, sculpture: bool = False) -> Draft | None:
     """Turn a Met object record into what Magpie keeps. None if it can't be used."""
     image = obj.get("primaryImage") or ""
@@ -164,6 +174,7 @@ def describe(obj: dict, sculpture: bool = False) -> Draft | None:
         "museum_url": obj.get("objectURL") or "",
         "image_url": image,
         "highlight": bool(obj.get("isHighlight")),
+        "subjects": subjects_of(obj),
     }
     return Draft(key=piece_key(obj["objectID"]), meta=meta, image_url=image)
 
@@ -315,6 +326,31 @@ class Met:
             # Sculpture may be switched on later, so only remember what can never be used.
             if not obj or describe(obj, sculpture=True) is None:
                 self._reject(object_id)
+        return None
+
+    async def by_artist(
+        self, name: str, rooms: list[int], skip: set[str], sculpture: bool = False, attempts: int = 4
+    ) -> Draft | None:
+        """Another piece by this artist from an open room. The search is loose (it finds
+        followers and copies too), so the record's own artist has to match."""
+        if not any(r in DEPARTMENTS for r in rooms):
+            return None
+        ids = await self._cached_list(
+            f"artist-{artist_slug(name)}",
+            lambda: self._search_all({"q": name, "artistOrCulture": "true", "hasImages": "true"}),
+        )
+        ids = [i for i in ids if piece_key(i) not in skip and i not in self.rejected]
+        for object_id in random.sample(ids, min(attempts, len(ids))):
+            obj = await self.get_object(object_id)
+            draft = describe(obj, sculpture) if obj else None
+            if not draft:
+                if not obj or describe(obj, sculpture=True) is None:
+                    self._reject(object_id)
+                continue
+            room = room_of(draft.meta)
+            if draft.meta["artist"].casefold() == name.casefold() and room in rooms:
+                draft.meta["room"] = room
+                return draft
         return None
 
     async def download(self, url: str) -> bytes:

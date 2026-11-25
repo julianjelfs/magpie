@@ -17,7 +17,15 @@
   // One scale for every section, so bars compare across the page.
   const scale = $derived.by(() => {
     if (!taste) return 1;
-    const all = [...taste.rooms, ...taste.centuries, ...taste.kinds, ...taste.highlights].filter((g) => g.seen >= FEW);
+    const all = [
+      ...taste.rooms,
+      ...taste.centuries,
+      ...taste.kinds,
+      ...taste.highlights,
+      ...taste.subjects,
+      ...taste.sources,
+      ...taste.picks
+    ].filter((g) => g.seen >= FEW);
     const top = Math.max(0.1, ...all.map(rate));
     return Math.ceil(top * 10) / 10;
   });
@@ -35,8 +43,10 @@
           { title: 'By room', rows: taste.rooms },
           { title: 'By century', rows: taste.centuries },
           { title: 'By kind', rows: taste.kinds },
+          { title: 'By subject', rows: taste.subjects },
+          { title: 'By source', rows: taste.sources },
           { title: 'Highlights', rows: taste.highlights }
-        ]
+        ].filter((s) => s.rows.length)
       : []
   );
 </script>
@@ -97,6 +107,36 @@
           {/each}
         </ul>
         <p class="note">{pct(taste.steering.highlights)} of picks come from the Met's own highlights.</p>
+      </section>
+
+      <section class="steer">
+        <h2>How pieces are picked</h2>
+        <p class="note">
+          {pct(taste.steering.open)} of picks are open: a random piece from the room, whatever you have kept before. The
+          rest choose between three pieces, leaning towards artists, centuries, kinds and subjects you keep.
+          {#if taste.steering.followed.length}
+            Up to {pct(taste.steering.follow)} look for more by an artist you have kept twice, in every museum.
+          {/if}
+          If steered picks aren't kept more often than open ones, steering isn't helping.
+        </p>
+        {#if taste.picks.length}
+          <ul>
+            {#each taste.picks as g}
+              <li class:few={g.seen < FEW} title={`${g.name}: kept ${g.kept} of ${g.seen} (${pct(rate(g))})`}>
+                <span class="name">{g.name}</span>
+                <span class="track" aria-hidden="true">
+                  <span class="bar" style:width={`${Math.min(1, rate(g) / scale) * 100}%`}></span>
+                </span>
+                <span class="count">{g.kept} of {g.seen}</span>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        {#if taste.steering.followed.length}
+          <p class="note">
+            Following: {taste.steering.followed.join(', ')}. Pass eight in a row by one of them and Magpie stops looking.
+          </p>
+        {/if}
       </section>
     </div>
     <p class="note">Faded rows have fewer than {FEW} pieces behind them: too few to say much.</p>

@@ -55,8 +55,17 @@ export type Taste = {
   centuries: Group[];
   kinds: Group[];
   highlights: Group[];
+  subjects: Group[];
+  sources: Group[];
+  picks: Group[];
   artists: { name: string; kept: number }[];
-  steering: { rooms: { name: string; share: number }[]; highlights: number };
+  steering: {
+    rooms: { name: string; share: number }[];
+    highlights: number;
+    open: number;
+    follow: number;
+    followed: string[];
+  };
   spend: { total_usd: number; month_usd: number; calls: number; per_piece_usd: number | null };
 };
 

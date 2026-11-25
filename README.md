@@ -1,19 +1,29 @@
 # Magpie
 
-A slowly gathered library of art. Magpie hangs one piece at a time from the Metropolitan Museum's open access collection on a wall painted to suit it. You keep it or pass. Kept pieces go into the hoard, where Claude tags them by period, movement, region, medium, technique and subject, and adds a short note on what to look at if you sketch them.
+A slowly gathered library of art. Magpie hangs one piece at a time from the open collections of the Metropolitan Museum, the Cleveland Museum of Art and SMK in Copenhagen, and from Wikimedia Commons, on a wall painted to suit it. You keep it or pass. Kept pieces go into the hoard, where Claude tags them by period, movement, region, medium, technique and subject, and adds a short note on what to look at if you sketch them.
 
 It runs on the Raspberry Pi at **https://magpie.julianjelfs.co.uk**. That one URL works on the home wifi and, through the Pi's Tailscale subnet route, anywhere on the tailnet.
 
 ## Using it
 
-- **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe right or left anywhere on the screen. The label beside each piece is the Met's own record, with a link to its page. On a phone the picture gets the whole screen and the label comes up on demand: tap the picture or the ⓘ button. It stays up for the next pieces until you close it.
-- **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. "Modern painting (Wikimedia Commons)" adds paintings by about a hundred artists from Monet to Mondrian, from Wikidata and Wikimedia Commons. About a quarter of picks come from the Met's highlights in those rooms.
+- **Look**: press Keep or Pass, the arrow keys (→ keeps, ← passes), or swipe right or left anywhere on the screen. The label beside each piece is the museum's own record, with a link to its page. On a phone the picture gets the whole screen and the label comes up on demand: tap the picture or the ⓘ button. It stays up for the next pieces until you close it.
+- **Rooms**: chooses which Met departments new pieces come from. Paintings, prints and drawings, Asian art, modern art, the Lehman collection, Islamic art and photographs are open to start with. Whatever the room, Magpie offers pictures only: paintings, drawings, prints, photographs, manuscript pages and calligraphy. "Sculpture too" adds sculpture. "Modern painting (Wikimedia Commons)" adds paintings by about a hundred artists from Monet to Mondrian, from Wikidata and Wikimedia Commons. Cleveland (paintings, drawings, prints, photographs) and SMK (paintings, drawings, prints) have a room each per kind. About a quarter of Met picks come from its highlights.
 - **Hoard**: every kept piece, filterable by tag. Open a piece for its tags and sketching notes, or to let it go. A piece you let go of is never offered again.
-- **What you keep** (linked from the hoard): how often you keep what you're shown, by room, century, kind and highlights, plus artists kept more than once. It also shows how new pieces are being steered.
+- **What you keep** (linked from the hoard): how often you keep what you're shown, by room, century, kind and highlights, subject and source, plus artists kept more than once. It also shows how new pieces are being steered, and whether steered picks are kept more often than open ones.
 
 ## Steering
 
-Rooms you keep more from come up more often. A room's weight is its keep rate, smoothed towards your overall keep rate (ten pretend verdicts at that rate), so a room seen twice and kept once doesn't leap to the top and a room not yet tried isn't punished. Every open room gets at least 5% of picks. The share of picks drawn from the Met's highlights moves between 10% and 40% depending on whether you keep more highlights than other pieces; it stays at 25% until there are 30 verdicts. Both use the museum record stored with every verdict, passes included, so steering costs no extra requests. The numbers live in `backend/app/taste.py`.
+Rooms you keep more from come up more often. A room's weight is its keep rate, smoothed towards your overall keep rate (ten pretend verdicts at that rate), so a room seen twice and kept once doesn't leap to the top and a room not yet tried isn't punished. Every open room gets at least 5% of picks. The share of picks drawn from the Met's highlights moves between 10% and 40% depending on whether you keep more highlights than other pieces; it stays at 25% until there are 30 verdicts. Both use the museum record stored with every verdict, passes included, so steering costs no extra requests. 
+
+Within a room, 30% of picks are open: one random piece, taste ignored. The rest are steered. A steered pick draws three pieces from the room and chooses between them by score. The score multiplies how much more or less often than usual you keep pieces with the same artist, century, kind, culture, school and subjects. One trait moves a score by at most a factor of three, a score stays between 0.2 and 5, and anything not seen before scores 1. So the least likely piece of three still has a chance, and unfamiliar work is never marked down.
+
+An artist kept twice or more, at a better rate than you keep things in general, is followed. Up to 15% of picks look for another piece by a followed artist, trying the sources in random order, so Hokusai kept at the Met brings Hokusai from Cleveland. Pass eight in a row by an artist and Magpie stops following them.
+
+Every piece records how it was picked (`pick` in its record). The taste page shows the keep rate for open, steered and followed picks side by side. Open picks are the control: if steered picks don't beat them, turn `EXPLORE` up.
+
+Subjects come from the Met's subject terms and Wikidata's genre. Cleveland and SMK publish none. Verdicts given before subjects were stored are filled in from the Met ten at a time on each pass of the background loop.
+
+The numbers live in `backend/app/taste.py`.
 
 ## Offline
 
@@ -26,6 +36,8 @@ One FastAPI process on `127.0.0.1:8060` serves the API and the built Svelte app.
 The Met retired its v1 search on 2026-10-01. Rooms that hold only pictures (Drawings and Prints, European Paintings, Photographs) are listed whole from `/v1/objects?departmentIds=N`. Every other room is listed from v1.1 searches filtered by type (`medium=Paintings` and so on), because the v1.1 search stops at offset 10,000. Each fetched record is checked against the picture types before its image is downloaded. Objects that can never be used are remembered in `backend/cache/rejected.json` and never fetched again. The Met's firewall blocks the house IP for a few minutes after a burst of requests, so Magpie sends one a second and rests five minutes after a 403. The laptop shares that IP, so heavy use of the API from it starves the Pi.
 
 Modern painting comes from Wikidata and Wikimedia Commons, because open museum collections only publish public-domain images and modern work mostly isn't. In the UK a painting stays in copyright until the end of the 70th year after its artist's death, so an artist who died in 1955 is public domain from 2026. `backend/app/artists.json` lists the artists (name, Wikidata ID, dates, nationality, group); edit it to add or drop people. Each artist is checked against that rule every time, so later artists join on their own each January. Wikidata's query service times out on broad questions but answers per artist in a second or two, so each artist's paintings are listed with one small query and cached for a week. Requests are spaced two seconds apart, and a 429 means waiting as long as Wikidata asks. A pick is a random artist, then a random painting with an image.
+
+Cleveland (`openaccess-api.clevelandart.org`, filtered to `cc0=1&has_image=1`) and SMK (`api.smk.dk`, filtered to `public_domain:true`) need no key and filter on the server, so a pick is one request at a random offset into the filtered list. Each is asked once a second at most. SMK's records are in Danish. A new museum with an API like these is a subclass of `OffsetSource` in `backend/app/openaccess.py`, a block of room numbers, and a line in `sources.py`.
 
 Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly backup copies the database only. Every kept piece records its museum image URL, and on startup Magpie fetches any picture that is missing from disk.
 
@@ -42,6 +54,11 @@ Data lives in `backend/magpie.db` (SQLite) and `backend/images/`. The nightly ba
 9. Steering favours rooms you keep from, and never gives an open room less than 5% of picks. `test_invariant_9_steering_favours_kept_rooms_and_never_shuts_one_out`
 10. A modern painting is offered only once its artist has been dead for more than 70 full years. `test_invariant_10_only_artists_dead_more_than_70_years_are_offered`
 11. Money spent tagging stays in the running total, even after the piece is let go or tagged again. `test_invariant_11_what_tagging_cost_is_never_forgotten`
+12. At least 30% of picks are open: one random piece from the room, with taste ignored. `test_invariant_12_a_fixed_share_of_picks_ignores_taste`
+13. Steering never puts a piece out of reach, and a piece unlike anything seen before is not marked down. `test_invariant_13_no_piece_is_scored_out_of_reach_and_the_unfamiliar_is_not_marked_down`
+14. Followed artists take no more than 15% of picks, and an artist is dropped after eight passes in a row. `test_invariant_14_followed_artists_keep_to_their_share_and_are_dropped_when_passed`
+15. Cleveland and SMK offer only pictures the museum marks CC0 or public domain. `test_invariant_15_cleveland_and_smk_offer_only_public_domain_pictures`
+16. A room added to Magpie opens by default without reopening a room you closed. `test_invariant_16_new_rooms_open_without_reopening_a_room_you_closed`
 
 The Anthropic API key never reaches the browser or the repo. It lives only in `backend/.env` (gitignored, mode 600) on the Pi and the laptop.
 
@@ -49,7 +66,7 @@ The Anthropic API key never reaches the browser or the repo. It lives only in `b
 
 ```bash
 scripts/dev.sh                          # API on :8060, Vite on :5180
-cd backend && uv run pytest             # invariants 1-5 and 7-10
+cd backend && uv run pytest             # invariants 1-5 and 7-16
 cd frontend && npm test                 # invariant 6
 cd frontend && npm run check            # svelte-check
 ```

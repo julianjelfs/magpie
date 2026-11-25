@@ -11,11 +11,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import random
 from collections.abc import Callable
 from typing import Protocol
 
 from . import config, db, images, store, taste
-from .met import Draft
+from .met import Draft, room_of
 from .tagger import Tagger, TagError
 
 log = logging.getLogger(__name__)
@@ -30,7 +31,13 @@ class Source(Protocol):
         weights: list[float] | None = None,
         highlight_share: float = 0.25,
     ) -> Draft | None: ...
+    async def by_artist(self, name: str, rooms: list[int], skip: set[str], sculpture: bool = False) -> Draft | None: ...
+    async def subjects(self, key: str) -> list[str]: ...
     async def download(self, url: str) -> bytes: ...
+
+
+# Older Met verdicts looked up for their subjects on each pass of the loop.
+BACKFILL = 10
 
 
 def remove_files(paths) -> None:
@@ -53,6 +60,7 @@ class Worker:
             try:
                 await self.finish_hoard()
                 await self.top_up()
+                await self.backfill_subjects()
             except asyncio.CancelledError:
                 raise
             except Exception:
@@ -74,8 +82,7 @@ class Worker:
                 rooms = store.rooms(conn)
                 with_sculpture = store.sculpture(conn)
                 skip = store.known_keys(conn)
-                # Rooms you keep more from come up more often.
-                steer = {"weights": taste.room_weights(conn, rooms), "highlight_share": taste.highlight_share(conn)}
+                steer = taste.steer(conn, rooms)
             if await self.prepare_one(rooms, skip, with_sculpture, steer):
                 misses = 0
             else:
@@ -83,11 +90,45 @@ class Worker:
             # Finish kept pieces between candidates, so a keep never waits for a full buffer.
             await self.finish_hoard()
 
+    async def pick(
+        self, rooms: list[int], skip: set[str], sculpture: bool, steer: taste.Steer, roll: float | None = None
+    ) -> Draft | None:
+        """The next piece: an open pick, more by a followed artist, or the best-scoring of a few."""
+        kind = taste.pick_kind(random.random() if roll is None else roll, bool(steer.followed))
+        draft = None
+        if kind == "artist":
+            draft = await self.source.by_artist(random.choice(steer.followed), rooms, skip, sculpture)
+            if not draft:
+                kind = "steered"
+        if not draft:
+            draft = await self.source.random_draft(
+                rooms, skip, sculpture, weights=steer.weights, highlight_share=steer.highlight_share
+            )
+        if draft and kind == "steered":
+            # The room is settled by the first draw; the others come from the same room.
+            drafts = [draft]
+            for _ in range(taste.DRAWS - 1):
+                more = await self.source.random_draft(
+                    [room_of(draft.meta)] if room_of(draft.meta) in rooms else rooms,
+                    skip | {d.key for d in drafts},
+                    sculpture,
+                    highlight_share=steer.highlight_share,
+                )
+                if more:
+                    drafts.append(more)
+            draft = random.choices(drafts, weights=[steer.model.score(d.meta) for d in drafts])[0]
+        if draft:
+            draft.meta["pick"] = kind
+        return draft
+
     async def prepare_one(
-        self, rooms: list[int], skip: set[str], sculpture: bool = False, steer: dict | None = None
+        self, rooms: list[int], skip: set[str], sculpture: bool = False, steer: taste.Steer | None = None
     ) -> bool:
         try:
-            draft = await self.source.random_draft(rooms, skip, sculpture, **(steer or {}))
+            if steer:
+                draft = await self.pick(rooms, skip, sculpture, steer)
+            else:
+                draft = await self.source.random_draft(rooms, skip, sculpture)
             if not draft:
                 return False
             raw = await self.source.download(draft.image_url)
@@ -102,6 +143,22 @@ class Worker:
             store.add_candidate(conn, draft.key, draft.meta, prepared)
         log.info("ready: %s %s", draft.key, draft.meta.get("title"))
         return True
+
+    async def backfill_subjects(self) -> None:
+        """Fetch the Met's subject terms for verdicts given before they were kept, a few
+        each pass, so passes as well as keeps say what you like pictures of."""
+        with self.session() as conn:
+            keys = store.without_subjects(conn, BACKFILL)
+        for key in keys:
+            try:
+                subjects = await self.source.subjects(key)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                log.info("subjects for older verdicts will wait: %s", e)
+                return
+            with self.session() as conn:
+                store.set_subjects(conn, key, subjects)
 
     # ------------------------------------------------------------ the hoard
 

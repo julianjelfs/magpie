@@ -47,6 +47,12 @@ class FakeSource:
         self.n += 1
         return Draft(key=f"met-{self.n}", meta=meta(self.n), image_url=meta(self.n)["image_url"])
 
+    async def by_artist(self, name, rooms, skip, sculpture=False):
+        return None
+
+    async def subjects(self, key):
+        return []
+
     async def download(self, url):
         return jpeg()
 

@@ -63,20 +63,26 @@ def piece_key(qid: str) -> str:
 
 def _query(qid: str) -> str:
     return f"""
-SELECT ?p ?pLabel ?img ?made ?collLabel WHERE {{
+SELECT ?p ?pLabel ?img ?made ?collLabel ?genreLabel WHERE {{
   ?p wdt:P170 wd:{qid}; wdt:P31 wd:{PAINTING}; wdt:P18 ?img.
   OPTIONAL {{ ?p wdt:P571 ?made }}
   OPTIONAL {{ ?p wdt:P195 ?coll }}
+  OPTIONAL {{ ?p wdt:P136 ?genre }}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
 }}"""
 
 
 def paintings_from(rows: list[dict]) -> list[dict]:
-    """One entry per painting from SPARQL rows (a painting with two collections comes twice)."""
+    """One entry per painting from SPARQL rows (a painting with two collections or genres
+    comes more than once). Its genres ("portrait", "landscape painting") are its subjects."""
     seen: dict[str, dict] = {}
     for r in rows:
         qid = r["p"]["value"].rsplit("/", 1)[1]
+        genre = r.get("genreLabel", {}).get("value", "")
+        genre = "" if genre.startswith("Q") and genre[1:].isdigit() else genre.capitalize()
         if qid in seen:
+            if genre and genre not in seen[qid]["subjects"]:
+                seen[qid]["subjects"].append(genre)
             continue
         title = r.get("pLabel", {}).get("value", "")
         made = r.get("made", {}).get("value", "")
@@ -88,6 +94,7 @@ def paintings_from(rows: list[dict]) -> list[dict]:
             "file": unquote(r["img"]["value"].rsplit("/", 1)[1]),
             "year": int(made[:4]) if made[:4].lstrip("-").isdigit() else None,
             "collection": "" if collection.startswith("Q") and collection[1:].isdigit() else collection,
+            "subjects": [genre] if genre else [],
         }
     return list(seen.values())
 
@@ -118,6 +125,8 @@ def describe(artist: dict, painting: dict) -> Draft:
         "museum_url": f"https://www.wikidata.org/wiki/{painting['qid']}",
         "image_url": image,
         "highlight": False,
+        "subjects": painting.get("subjects", []),
+        "group": artist.get("group", ""),
         "room": MODERN,
     }
     return Draft(key=piece_key(painting["qid"]), meta=meta, image_url=image)
@@ -190,6 +199,15 @@ class Wikidata:
             if choices:
                 return describe(artist, random.choice(choices))
         return None
+
+    async def by_artist(self, name: str, rooms: list[int], skip: set[str]) -> Draft | None:
+        if MODERN not in rooms:
+            return None
+        artist = next((a for a in eligible_artists() if a["name"].casefold() == name.casefold()), None)
+        if not artist:
+            return None
+        choices = [p for p in await self.paintings(artist) if piece_key(p["qid"]) not in skip]
+        return describe(artist, random.choice(choices)) if choices else None
 
     async def download(self, url: str) -> bytes:
         response = await self.http.get(url, timeout=httpx.Timeout(120.0, connect=10.0))
